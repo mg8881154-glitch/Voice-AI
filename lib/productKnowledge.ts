@@ -31,9 +31,9 @@ export type CompetitorComparison = {
 
 export const PRODUCT = {
   name: 'EchoSphere',
-  tagline: 'Real-Time Voice AI Sales Agent',
+  tagline: 'Real-Time Voice AI Assistant (Hindi & English)',
   description:
-    'An enterprise-grade AI voice agent platform that engages leads, qualifies prospects, and books meetings — 24 × 7 without human intervention.',
+    'An intelligent bilingual voice AI platform that provides customer support, study & learning guidance, and instant answers 24 × 7 in Hindi, Hinglish, and English.',
 };
 
 export const PLANS: Plan[] = [

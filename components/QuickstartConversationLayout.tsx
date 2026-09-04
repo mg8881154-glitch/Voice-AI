@@ -103,7 +103,7 @@ export function QuickstartConversationLayout({
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="text-base font-bold tracking-tight text-foreground">EchoSphere</span>
               <span className="hidden text-[11px] font-medium text-muted-foreground sm:inline">
-                AI Sales Agent
+                Voice AI Assistant
               </span>
             </div>
             <div className="hidden md:block">{pipelineMetrics}</div>

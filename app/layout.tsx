@@ -5,12 +5,20 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#0f0f1e',
 };
 
 export const metadata: Metadata = {
-  title: 'EchoSphere — Real-Time Voice AI Sales Agent',
+  title: 'EchoSphere — Bilingual Voice AI Assistant (Hindi & English)',
   description:
-    'EchoSphere is a real-time AI voice sales agent that engages leads, qualifies prospects, handles objections, and books demos — powered by Agora Conversational AI.',
+    'EchoSphere is an intelligent bilingual real-time voice AI assistant for customer support, study help, and instant answers in Hindi, Hinglish, and English.',
+  manifest: '/site.webmanifest',
+  applicationName: 'EchoSphere',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'EchoSphere',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },

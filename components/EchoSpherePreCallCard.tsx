@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Mic, Zap, Users, BarChart2, Phone, X } from 'lucide-react';
+import { Loader2, Mic, Zap, Languages, Headphones, GraduationCap, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   normalisePhoneNumber,
@@ -14,6 +14,7 @@ import {
   type PhoneCallRecord,
 } from '@/lib/phoneCallService';
 import { cn } from '@/lib/utils';
+import { InstallAppButton } from './InstallAppButton';
 
 type EchoSpherePreCallCardProps = {
   isLoading: boolean;
@@ -22,10 +23,10 @@ type EchoSpherePreCallCardProps = {
 };
 
 const FEATURES = [
-  { icon: <Mic className="h-4 w-4" />, text: 'Real-time voice AI' },
+  { icon: <Languages className="h-4 w-4" />, text: 'Hindi & English voice' },
+  { icon: <Headphones className="h-4 w-4" />, text: 'Customer Support' },
+  { icon: <GraduationCap className="h-4 w-4" />, text: 'Study & Learning AI' },
   { icon: <Zap className="h-4 w-4" />, text: 'Sub-500ms response' },
-  { icon: <Users className="h-4 w-4" />, text: 'Lead qualification' },
-  { icon: <BarChart2 className="h-4 w-4" />, text: 'CRM-ready context' },
 ];
 
 export function EchoSpherePreCallCard({
@@ -115,13 +116,13 @@ export function EchoSpherePreCallCard({
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">EchoSphere</h1>
             <p className="mt-0.5 text-sm font-medium text-indigo-300/80">
-              Real-Time Voice AI Sales Agent
+              Bilingual Voice AI Assistant (Hindi & English)
             </p>
           </div>
         </div>
 
         <p className="mb-6 text-sm leading-6 text-slate-400">
-          Talk with Nova, our AI sales agent — in your browser or on your phone.
+          Talk with Nova in Hindi, Hinglish, or English — for customer support, study help, and instant answers.
         </p>
 
         {/* Feature pills */}
@@ -255,8 +256,14 @@ export function EchoSpherePreCallCard({
           </div>
         )}
 
+        {!showPhoneInput && !isLoading && (
+          <div className="mt-4 w-full">
+            <InstallAppButton />
+          </div>
+        )}
+
         {!showPhoneInput && !isLoading && !error && (
-          <p className="mt-4 text-[11px] text-slate-500">
+          <p className="mt-3 text-[11px] text-slate-500">
             Microphone access required for browser · Works best with headphones
           </p>
         )}
