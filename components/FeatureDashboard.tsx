@@ -181,19 +181,396 @@ const CTA_ICONS: Record<FeatureId, React.ReactNode> = {
   'recording':     <Eye className="h-3.5 w-3.5" />,
 };
 
-// ─── Placeholder pages ────────────────────────────────────────────────────────
+// ─── Analytics Page ───────────────────────────────────────────────────────────
 
-function PlaceholderPage({ title, icon }: { title: string; icon: React.ReactNode }) {
+function AnalyticsPage() {
+  const stats = [
+    { label: 'Total Calls',        value: '247',   change: '+12%',  up: true,  color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20' },
+    { label: 'AI Agent Sessions',  value: '183',   change: '+28%',  up: true,  color: 'text-indigo-400',  bg: 'bg-indigo-500/10',  border: 'border-indigo-500/20' },
+    { label: 'Leads Captured',     value: '94',    change: '+19%',  up: true,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { label: 'Demos Booked',       value: '31',    change: '+7%',   up: true,  color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20' },
+    { label: 'Avg Call Duration',  value: '4m 32s',change: '-8%',   up: false, color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20' },
+    { label: 'Conversion Rate',    value: '38%',   change: '+5%',   up: true,  color: 'text-rose-400',    bg: 'bg-rose-500/10',    border: 'border-rose-500/20' },
+  ];
+
+  const pipeline = [
+    { stage: 'Visitor',    count: 520, pct: 100, color: 'bg-muted/60' },
+    { stage: 'Engaged',    count: 247, pct: 48,  color: 'bg-blue-500/60' },
+    { stage: 'Qualified',  count: 94,  pct: 18,  color: 'bg-indigo-500/60' },
+    { stage: 'Demo Booked',count: 31,  pct: 6,   color: 'bg-violet-500/60' },
+    { stage: 'Converted',  count: 12,  pct: 2.3, color: 'bg-emerald-500/60' },
+  ];
+
+  const topAgentMetrics = [
+    { metric: 'Avg STT Latency',  value: '180ms',  status: 'good' },
+    { metric: 'Avg LLM Latency',  value: '420ms',  status: 'good' },
+    { metric: 'Avg TTS Latency',  value: '210ms',  status: 'good' },
+    { metric: 'Interruptions',    value: '14/day', status: 'ok' },
+    { metric: 'Session Uptime',   value: '99.8%',  status: 'good' },
+    { metric: 'Escalation Rate',  value: '6.2%',   status: 'ok' },
+  ];
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-12 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-muted/20 text-muted-foreground/40">
-        {icon}
+    <main className="flex-1 overflow-auto px-4 py-8 md:px-8">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Analytics</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Last 30 days · EchoSphere platform overview</p>
       </div>
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-        <p className="text-sm text-muted-foreground mt-1">Coming soon — this section is under construction.</p>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 mb-8">
+        {stats.map(s => (
+          <div key={s.label} className={cn('rounded-2xl border p-4 space-y-1', s.bg, s.border)}>
+            <p className="text-[11px] font-medium text-muted-foreground">{s.label}</p>
+            <p className={cn('text-xl font-bold', s.color)}>{s.value}</p>
+            <p className={cn('text-[11px] font-semibold', s.up ? 'text-emerald-400' : 'text-rose-400')}>
+              {s.change} vs last month
+            </p>
+          </div>
+        ))}
       </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Sales Pipeline Funnel */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Sales Pipeline Funnel</h3>
+          <div className="space-y-3">
+            {pipeline.map(p => (
+              <div key={p.stage}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-muted-foreground">{p.stage}</span>
+                  <span className="text-xs font-bold text-foreground">{p.count} <span className="text-muted-foreground/60">({p.pct}%)</span></span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted/30 overflow-hidden">
+                  <div className={cn('h-full rounded-full transition-all', p.color)} style={{ width: `${p.pct}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Agent Performance */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">AI Agent Performance</h3>
+          <div className="space-y-2.5">
+            {topAgentMetrics.map(m => (
+              <div key={m.metric} className="flex items-center justify-between rounded-xl border border-border/60 bg-background/40 px-3 py-2">
+                <span className="text-xs text-muted-foreground">{m.metric}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-foreground">{m.value}</span>
+                  <span className={cn('h-2 w-2 rounded-full', m.status === 'good' ? 'bg-emerald-400' : 'bg-amber-400')} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Weekly activity bar chart (CSS-only) */}
+      <div className="mt-6 rounded-2xl border border-border bg-card/30 p-5">
+        <h3 className="text-sm font-semibold text-foreground mb-4">Weekly Call Activity</h3>
+        <div className="flex items-end gap-2 h-28">
+          {[
+            { day: 'Mon', calls: 32, leads: 12 },
+            { day: 'Tue', calls: 45, leads: 18 },
+            { day: 'Wed', calls: 38, leads: 15 },
+            { day: 'Thu', calls: 52, leads: 24 },
+            { day: 'Fri', calls: 41, leads: 17 },
+            { day: 'Sat', calls: 18, leads: 6 },
+            { day: 'Sun', calls: 21, leads: 2 },
+          ].map(d => (
+            <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+              <div className="w-full flex flex-col items-center gap-0.5">
+                <div
+                  className="w-full rounded-t-md bg-primary/60 transition-all"
+                  style={{ height: `${(d.calls / 52) * 80}px` }}
+                  title={`${d.calls} calls`}
+                />
+                <div
+                  className="w-full rounded-t-sm bg-emerald-500/50"
+                  style={{ height: `${(d.leads / 52) * 30}px` }}
+                  title={`${d.leads} leads`}
+                />
+              </div>
+              <span className="text-[10px] text-muted-foreground">{d.day}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center gap-4">
+          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-3 rounded-sm bg-primary/60" />Calls</span>
+          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-3 rounded-sm bg-emerald-500/50" />Leads</span>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ─── Call Logs Page ───────────────────────────────────────────────────────────
+
+function CallLogsPage() {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'ai-agent' | 'video' | 'demo'>('all');
+
+  const logs = [
+    { id: 'c001', type: 'ai-agent', customer: 'Priya Sharma',    company: 'TechCorp India',    duration: '6m 12s', status: 'qualified',   outcome: 'Demo booked',       time: '2 min ago',   lead: 'Hot 🔥' },
+    { id: 'c002', type: 'video',    customer: 'Rahul Mehta',     company: 'StartupXYZ',        duration: '22m 40s',status: 'completed',   outcome: 'Proposal sent',     time: '18 min ago',  lead: 'Qualified' },
+    { id: 'c003', type: 'ai-agent', customer: 'Sara Johnson',    company: 'Acme Corp',         duration: '4m 55s', status: 'escalated',   outcome: 'Transferred',       time: '45 min ago',  lead: 'Interested' },
+    { id: 'c004', type: 'demo',     customer: 'Amit Patel',      company: 'GlobalTrade Ltd',   duration: '35m 10s',status: 'completed',   outcome: 'Trial started',     time: '1h ago',      lead: 'Hot 🔥' },
+    { id: 'c005', type: 'ai-agent', customer: 'Jennifer Wu',     company: 'CloudBase',         duration: '3m 20s', status: 'missed',      outcome: '—',                 time: '2h ago',      lead: 'Unqualified' },
+    { id: 'c006', type: 'video',    customer: 'Carlos Rivera',   company: 'LatamSales',        duration: '18m 02s',status: 'completed',   outcome: 'Contract review',   time: '3h ago',      lead: 'Qualified' },
+    { id: 'c007', type: 'ai-agent', customer: 'Sneha Gupta',     company: 'EdTech Pvt',        duration: '7m 45s', status: 'qualified',   outcome: 'Follow-up email',   time: '4h ago',      lead: 'Interested' },
+    { id: 'c008', type: 'demo',     customer: 'Michael Scott',   company: 'Dunder Mifflin',    duration: '42m 00s',status: 'completed',   outcome: 'Enterprise deal',   time: '5h ago',      lead: 'Hot 🔥' },
+  ];
+
+  const typeIcon: Record<string, string> = { 'ai-agent': '🤖', 'video': '📹', 'demo': '🎙️' };
+  const statusColor: Record<string, string> = {
+    'qualified': 'bg-emerald-500/15 text-emerald-400',
+    'completed': 'bg-blue-500/15 text-blue-400',
+    'escalated': 'bg-amber-500/15 text-amber-400',
+    'missed':    'bg-rose-500/15 text-rose-400',
+  };
+
+  const filtered = logs.filter(l => {
+    const matchType   = filter === 'all' || l.type === filter;
+    const matchSearch = search === '' ||
+      l.customer.toLowerCase().includes(search.toLowerCase()) ||
+      l.company.toLowerCase().includes(search.toLowerCase());
+    return matchType && matchSearch;
+  });
+
+  return (
+    <main className="flex-1 overflow-auto px-4 py-8 md:px-8">
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Call Logs</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{logs.length} total sessions · last 7 days</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search customer or company…"
+            className="h-9 w-56 rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary transition-colors"
+          />
+          {/* Filter tabs */}
+          {(['all', 'ai-agent', 'video', 'demo'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={cn('rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-colors',
+                filter === f ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              )}>
+              {f === 'ai-agent' ? 'AI Agent' : f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-2xl border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border/60 bg-muted/20">
+              {['Type', 'Customer', 'Company', 'Duration', 'Status', 'Outcome', 'Lead', 'Time'].map(h => (
+                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground first:pl-5">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/40">
+            {filtered.map(log => (
+              <tr key={log.id} className="group hover:bg-muted/20 transition-colors">
+                <td className="px-4 py-3 pl-5 text-lg">{typeIcon[log.type]}</td>
+                <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{log.customer}</td>
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{log.company}</td>
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{log.duration}</td>
+                <td className="px-4 py-3">
+                  <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize', statusColor[log.status] ?? 'bg-muted text-muted-foreground')}>
+                    {log.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{log.outcome}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{log.lead}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{log.time}</td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  No calls match your filter
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </main>
+  );
+}
+
+// ─── Shared sub-components (defined outside render) ──────────────────────────
+
+const INPUT_CLS  = 'h-9 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary transition-colors';
+const SELECT_CLS = 'h-9 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary transition-colors cursor-pointer';
+
+function SettingsField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-foreground mb-1">{label}</label>
+      {hint && <p className="text-[11px] text-muted-foreground mb-1.5">{hint}</p>}
+      {children}
     </div>
+  );
+}
+
+// ─── Settings Page ─────────────────────────────────────────────────────────────
+
+function SettingsPage() {
+  const [agentName, setAgentName]       = useState('Nova');
+  const [greeting, setGreeting]         = useState("Hi, I'm Nova from EchoSphere. What brings you in today?");
+  const [model, setModel]               = useState('gpt-4o-mini');
+  const [voice, setVoice]               = useState('English_captivating_female1');
+  const [language, setLanguage]         = useState('en');
+  const [silenceMs, setSilenceMs]       = useState('420');
+  const [interruptMs, setInterruptMs]   = useState('120');
+  const [maxHistory, setMaxHistory]     = useState('15');
+  const [temperature, setTemperature]   = useState('0.7');
+  const [saved, setSaved]               = useState(false);
+
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  return (
+    <main className="flex-1 overflow-auto px-4 py-8 md:px-8">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Settings</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Configure your AI sales agent and platform</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 max-w-4xl">
+
+        {/* Agent Identity */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5 space-y-4">
+          <h3 className="text-sm font-bold text-foreground border-b border-border/60 pb-3">🤖 Agent Identity</h3>
+          <SettingsField label="Agent Name" hint="What your AI agent calls itself during calls">
+            <input value={agentName} onChange={e => setAgentName(e.target.value)} className={INPUT_CLS} />
+          </SettingsField>
+          <SettingsField label="Greeting Message" hint="First thing the agent says when a call starts">
+            <textarea value={greeting} onChange={e => setGreeting(e.target.value)} rows={3}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary transition-colors resize-none" />
+          </SettingsField>
+        </div>
+
+        {/* LLM Settings */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5 space-y-4">
+          <h3 className="text-sm font-bold text-foreground border-b border-border/60 pb-3">🧠 LLM Settings</h3>
+          <SettingsField label="Model">
+            <select value={model} onChange={e => setModel(e.target.value)} className={SELECT_CLS}>
+              <option value="gpt-4o-mini">GPT-4o Mini (Fast · Default)</option>
+              <option value="gpt-4o">GPT-4o (Smarter)</option>
+              <option value="gpt-4-turbo">GPT-4 Turbo (Balanced)</option>
+              <option value="claude-3-haiku">Claude 3 Haiku (Low latency)</option>
+            </select>
+          </SettingsField>
+          <SettingsField label="Temperature" hint="0 = focused/predictable · 1 = creative/varied">
+            <div className="flex items-center gap-3">
+              <input type="range" min="0" max="1" step="0.1" value={temperature}
+                onChange={e => setTemperature(e.target.value)} className="flex-1 accent-primary" />
+              <span className="text-sm font-mono font-bold text-primary w-8 text-right">{temperature}</span>
+            </div>
+          </SettingsField>
+          <SettingsField label="Max Conversation History" hint="How many past turns the LLM remembers">
+            <input type="number" min="5" max="100" value={maxHistory}
+              onChange={e => setMaxHistory(e.target.value)} className={INPUT_CLS} />
+          </SettingsField>
+        </div>
+
+        {/* Voice & Language */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5 space-y-4">
+          <h3 className="text-sm font-bold text-foreground border-b border-border/60 pb-3">🎙️ Voice & Language</h3>
+          <SettingsField label="TTS Voice">
+            <select value={voice} onChange={e => setVoice(e.target.value)} className={SELECT_CLS}>
+              <option value="English_captivating_female1">Nova (Captivating Female · Default)</option>
+              <option value="English_professional_male1">Alex (Professional Male)</option>
+              <option value="English_warm_female2">Sarah (Warm Female)</option>
+              <option value="English_confident_male2">James (Confident Male)</option>
+            </select>
+          </SettingsField>
+          <SettingsField label="Language">
+            <select value={language} onChange={e => setLanguage(e.target.value)} className={SELECT_CLS}>
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ja">Japanese</option>
+            </select>
+          </SettingsField>
+        </div>
+
+        {/* VAD Settings */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5 space-y-4">
+          <h3 className="text-sm font-bold text-foreground border-b border-border/60 pb-3">⚡ Turn Detection (VAD)</h3>
+          <SettingsField label="End-of-speech silence (ms)" hint="How long to wait before Nova responds">
+            <input type="number" min="200" max="2000" value={silenceMs}
+              onChange={e => setSilenceMs(e.target.value)} className={INPUT_CLS} />
+          </SettingsField>
+          <SettingsField label="Interruption threshold (ms)" hint="How quickly Nova detects you're speaking">
+            <input type="number" min="50" max="500" value={interruptMs}
+              onChange={e => setInterruptMs(e.target.value)} className={INPUT_CLS} />
+          </SettingsField>
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+            <p className="text-[11px] text-amber-400">
+              Lower values = faster response but more false triggers. Recommended: 420ms / 120ms.
+            </p>
+          </div>
+        </div>
+
+        {/* CRM & Integrations */}
+        <div className="rounded-2xl border border-border bg-card/30 p-5 space-y-4 lg:col-span-2">
+          <h3 className="text-sm font-bold text-foreground border-b border-border/60 pb-3">🔗 Integrations</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { name: 'Salesforce',    status: 'Not connected', icon: '☁️',  color: 'border-border/60' },
+              { name: 'HubSpot',       status: 'Not connected', icon: '🟠',  color: 'border-border/60' },
+              { name: 'Amazon S3',     status: 'Configured',    icon: '🪣',  color: 'border-emerald-500/30 bg-emerald-500/5' },
+              { name: 'Google Calendar',status: 'Not connected',icon: '📅',  color: 'border-border/60' },
+              { name: 'Pipedrive',     status: 'Not connected', icon: '🔧',  color: 'border-border/60' },
+              { name: 'Slack',         status: 'Not connected', icon: '💬',  color: 'border-border/60' },
+            ].map(i => (
+              <div key={i.name} className={cn('flex items-center justify-between rounded-xl border px-3 py-2.5', i.color)}>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{i.icon}</span>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{i.name}</p>
+                    <p className={cn('text-[10px]', i.status === 'Configured' ? 'text-emerald-400' : 'text-muted-foreground')}>{i.status}</p>
+                  </div>
+                </div>
+                <button className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                  {i.status === 'Configured' ? 'Manage' : 'Connect'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Save button */}
+      <div className="mt-6 max-w-4xl">
+        <button
+          onClick={handleSave}
+          className={cn(
+            'flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-all',
+            saved ? 'bg-emerald-600' : 'hover:opacity-90',
+          )}
+          style={saved ? undefined : { background: 'linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(258 90% 66%) 100%)' }}
+        >
+          {saved ? '✓ Saved!' : 'Save Settings'}
+        </button>
+      </div>
+    </main>
   );
 }
 
@@ -498,12 +875,10 @@ export function FeatureDashboard() {
       </header>
 
       {/* ── Page Content ──────────────────────────────────────────────────── */}
-      {activePage !== 'dashboard' ? (
-        <PlaceholderPage
-          title={NAV_LINKS.find(l => l.id === activePage)?.label ?? activePage}
-          icon={NAV_LINKS.find(l => l.id === activePage)?.icon}
-        />
-      ) : (
+      {activePage === 'analytics' && <AnalyticsPage />}
+      {activePage === 'call-logs' && <CallLogsPage />}
+      {activePage === 'settings'  && <SettingsPage />}
+      {activePage === 'dashboard' && (
         <main className="flex-1 px-4 py-8 md:px-8">
           {/* Page title row */}
           <div className="mb-8 flex items-end justify-between">
