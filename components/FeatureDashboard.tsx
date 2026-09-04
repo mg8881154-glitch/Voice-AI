@@ -203,8 +203,28 @@ export function FeatureDashboard() {
   const [activeFeature, setActiveFeature] = useState<FeatureId | null>(null);
   const [activePage, setActivePage]       = useState<NavPage>('dashboard');
   const [profileOpen, setProfileOpen]     = useState(false);
+  const [notifOpen, setNotifOpen]         = useState(false);
   const [fabOpen, setFabOpen]             = useState(false);
-  const [notifCount]                      = useState(3);
+
+  // ── Notifications state ──────────────────────────────────────────────────
+  const [notifications, setNotifications] = useState([
+    { id: '1', title: 'New lead captured',       body: 'A visitor qualified via AI agent',           time: '2m ago',  read: false, icon: '🎯' },
+    { id: '2', title: 'Demo booking confirmed',  body: 'Meeting scheduled for tomorrow 2pm',         time: '14m ago', read: false, icon: '📅' },
+    { id: '3', title: 'Call recording ready',    body: 'sales-meeting-001.mp4 uploaded to S3',       time: '1h ago',  read: false, icon: '🎙️' },
+    { id: '4', title: 'Agent session ended',     body: 'Nova completed a 6-minute sales call',       time: '2h ago',  read: true,  icon: '✅' },
+    { id: '5', title: 'Escalation requested',    body: 'Customer asked to speak to a human agent',   time: '3h ago',  read: true,  icon: '👤' },
+  ]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAllRead = () =>
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+  const markOneRead = (id: string) =>
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+  const dismissNotif = (id: string) =>
+    setNotifications(prev => prev.filter(n => n.id !== id));
 
   // ── Feature detail view ─────────────────────────────────────────────────────
   if (activeFeature) {
@@ -308,21 +328,119 @@ export function FeatureDashboard() {
 
         {/* RIGHT: Notifications + Profile + New Call */}
         <div className="flex items-center gap-2">
-          {/* Notification bell */}
-          <button className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Notifications">
-            <Bell className="h-4.5 w-4.5 h-[18px] w-[18px]" />
-            {notifCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
-                {notifCount}
-              </span>
+
+          {/* ── Notification bell + dropdown ─────────────────────────────── */}
+          <div className="relative">
+            <button
+              onClick={() => { setNotifOpen(v => !v); setProfileOpen(false); }}
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              aria-label="Notifications"
+              aria-expanded={notifOpen}
+            >
+              <Bell className="h-[18px] w-[18px]" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white leading-none">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification dropdown */}
+            {notifOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-border bg-card shadow-2xl shadow-black/40 overflow-hidden z-50">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Notifications</span>
+                    {unreadCount > 0 && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllRead}
+                      className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                {/* Notification list */}
+                <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-10 text-center">
+                      <Bell className="h-8 w-8 text-muted-foreground/20" />
+                      <p className="text-xs text-muted-foreground/60">No notifications</p>
+                    </div>
+                  ) : (
+                    notifications.map(n => (
+                      <div
+                        key={n.id}
+                        onClick={() => markOneRead(n.id)}
+                        className={cn(
+                          'group flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/40',
+                          !n.read && 'bg-primary/5',
+                        )}
+                      >
+                        {/* Icon */}
+                        <div className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base',
+                          !n.read ? 'bg-primary/15' : 'bg-muted/40',
+                        )}>
+                          {n.icon}
+                        </div>
+
+                        {/* Content */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className={cn(
+                              'text-xs leading-snug',
+                              !n.read ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground',
+                            )}>
+                              {n.title}
+                            </p>
+                            <button
+                              onClick={e => { e.stopPropagation(); dismissNotif(n.id); }}
+                              className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-all text-base leading-none"
+                              aria-label="Dismiss"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{n.body}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground/50">{n.time}</p>
+                        </div>
+
+                        {/* Unread dot */}
+                        {!n.read && (
+                          <span className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-border/60 px-4 py-2.5">
+                  <button
+                    onClick={() => { setNotifications([]); }}
+                    className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Clear all notifications
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
 
           {/* User profile dropdown */}
           <div className="relative">
             <button
-              onClick={() => setProfileOpen(v => !v)}
+              onClick={() => { setProfileOpen(v => !v); setNotifOpen(false); }}
               className="flex items-center gap-2 rounded-lg border border-border bg-card/50 pl-1.5 pr-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
               aria-label="User profile"
               aria-expanded={profileOpen}
@@ -535,8 +653,8 @@ export function FeatureDashboard() {
       </div>
 
       {/* Overlay to close dropdowns */}
-      {(profileOpen) && (
-        <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} aria-hidden="true" />
+      {(profileOpen || notifOpen) && (
+        <div className="fixed inset-0 z-30" onClick={() => { setProfileOpen(false); setNotifOpen(false); }} aria-hidden="true" />
       )}
     </div>
   );
