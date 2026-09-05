@@ -5,11 +5,16 @@ const rootDir = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  // Disable the floating Next.js dev indicator badge
+  // Remove 'standalone' for Vercel — Vercel manages its own output format
+  // output: 'standalone' is only needed for Docker/self-hosted deployments
   devIndicators: false,
   images: {
     unoptimized: true,
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'source.unsplash.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
+    ],
   },
   turbopack: {
     root: rootDir,

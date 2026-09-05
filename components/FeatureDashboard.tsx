@@ -638,8 +638,7 @@ export function FeatureDashboard() {
         <div className="flex min-h-0 flex-1 overflow-hidden">
           {activeFeature === 'video'         && <div className="flex-1 overflow-auto"><VideoCallComponent /></div>}
           {activeFeature === 'demo'          && <div className="flex-1 overflow-hidden flex flex-col"><LiveDemoComponent /></div>}
-          {activeFeature === 'ai-agent'      && <AIAgentLauncher />}
-          {activeFeature === 'transcription' && (
+          {activeFeature === 'ai-agent'      && <AIAgentLauncher />}          {activeFeature === 'transcription' && (
             <div className="flex-1 overflow-auto p-4">
               <LiveCaptionsOverlay className="min-h-[500px]" />
             </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Mic, Zap, Languages, Headphones, GraduationCap, Phone, X } from 'lucide-react';
+import { Loader2, Mic, Zap, Languages, CalendarCheck, UserCheck, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   normalisePhoneNumber,
@@ -24,9 +24,9 @@ type EchoSpherePreCallCardProps = {
 
 const FEATURES = [
   { icon: <Languages className="h-4 w-4" />, text: 'Hindi & English voice' },
-  { icon: <Headphones className="h-4 w-4" />, text: 'Customer Support' },
-  { icon: <GraduationCap className="h-4 w-4" />, text: 'Study & Learning AI' },
-  { icon: <Zap className="h-4 w-4" />, text: 'Sub-500ms response' },
+  { icon: <UserCheck className="h-4 w-4" />, text: 'Autonomous Qualification' },
+  { icon: <CalendarCheck className="h-4 w-4" />, text: 'CRM & Calendar Booking' },
+  { icon: <Zap className="h-4 w-4" />, text: 'Sub-500ms Interruption' },
 ];
 
 export function EchoSpherePreCallCard({
@@ -116,13 +116,13 @@ export function EchoSpherePreCallCard({
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white">EchoSphere</h1>
             <p className="mt-0.5 text-sm font-medium text-indigo-300/80">
-              Bilingual Voice AI Assistant (Hindi & English)
+              Autonomous Voice AI Sales Agent (Hindi & English)
             </p>
           </div>
         </div>
 
         <p className="mb-6 text-sm leading-6 text-slate-400">
-          Talk with Nova in Hindi, Hinglish, or English — for customer support, study help, and instant answers.
+          Conduct a live sales qualification call in Hindi, Hinglish, or English. Nova understands requirements, handles pricing & competitor objections, and books demos in real time.
         </p>
 
         {/* Feature pills */}
