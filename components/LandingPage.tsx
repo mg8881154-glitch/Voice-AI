@@ -159,7 +159,11 @@ export default function LandingPage() {
       const responseData = await agoraResponse.json();
 
       if (!agoraResponse.ok) {
-        throw new Error(`Failed to generate Agora token: ${JSON.stringify(responseData)}`);
+        throw new Error(
+          responseData?.error === 'Agora credentials are not set'
+            ? 'Agora App ID or Certificate missing — please set environment variables on Vercel'
+            : `Failed to generate Agora token: ${JSON.stringify(responseData)}`,
+        );
       }
 
       const [agentData, rtm] = await Promise.all([
@@ -172,8 +176,13 @@ export default function LandingPage() {
           } as ClientStartRequest),
         })
           .then(async (res) => {
-            if (!res.ok) { setAgentJoinError(true); return null; }
-            return res.json() as Promise<AgentResponse>;
+            const body = await res.json();
+            if (!res.ok) {
+              console.error('[invite-agent] error:', body);
+              setAgentJoinError(true);
+              return null;
+            }
+            return body as AgentResponse;
           })
           .catch((err) => {
             console.error('Failed to start conversation with agent:', err);
@@ -197,8 +206,15 @@ export default function LandingPage() {
       setAgoraData({ ...responseData, agentId: agentData?.agent_id });
       setShowConversation(true);
     } catch (err) {
-      setError('Failed to start conversation. Please try again.');
-      console.error('Error starting conversation:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[Start conversation] error:', msg);
+      setError(
+        msg.includes('Agora credentials')
+          ? msg
+          : msg.includes('401') || msg.includes('token')
+          ? 'Authentication failed — check your Agora App ID and Certificate on Vercel.'
+          : 'Failed to start conversation. Please try again.',
+      );
     } finally {
       setIsLoading(false);
     }
