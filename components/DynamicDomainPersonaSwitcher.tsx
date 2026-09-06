@@ -10,6 +10,7 @@ import {
   X,
   CheckCircle2,
   Trash2,
+  Pencil,
   ExternalLink,
   Volume2,
   Globe2,
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDomain, CreateCustomDomainInput } from '@/context/DomainContext';
-import { DomainId, CustomMediaCard } from '@/lib/domainEngine';
+import { DomainId, CustomMediaCard, DomainMetadata } from '@/lib/domainEngine';
 
 interface DynamicDomainPersonaSwitcherProps {
   className?: string;
@@ -39,12 +40,14 @@ export function DynamicDomainPersonaSwitcher({
     activeDomainMetadata,
     setActiveDomain,
     createCustomDomain,
+    updateCustomDomain,
     deleteCustomDomain,
   } = useDomain();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingDomainId, setEditingDomainId] = useState<string | null>(null);
 
-  // Form state for creating a custom domain
+  // Form state for creating / editing a custom domain
   const [formTitle, setFormTitle] = useState('');
   const [formAgentName, setFormAgentName] = useState('');
   const [formRole, setFormRole] = useState('');
@@ -91,6 +94,57 @@ export function DynamicDomainPersonaSwitcher({
     );
   };
 
+  const openCreateModal = () => {
+    setEditingDomainId(null);
+    setFormTitle('');
+    setFormAgentName('');
+    setFormRole('');
+    setFormInstructions('');
+    setFormLanguage('English (US)');
+    setFormAccent('Professional Conversational');
+    setFormGreeting('');
+    setFormBadge('CUSTOM');
+    setMediaCards([
+      {
+        imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80',
+        title: 'Corporate Headquarters Tour',
+        subtitle: 'Premier Downtown Facility',
+        actionButtonLabel: 'Schedule Consultation',
+      },
+    ]);
+    setIsCreateModalOpen(true);
+  };
+
+  const openEditModal = (custom: DomainMetadata) => {
+    setEditingDomainId(custom.id);
+    setFormTitle(custom.title);
+    setFormAgentName(custom.personaName);
+    setFormRole(custom.personaTitle);
+    setFormInstructions(custom.customInstructions || '');
+    setFormLanguage(custom.languagePreference || 'English (US)');
+    setFormAccent(custom.accentPreference || 'Professional Conversational');
+    setFormGreeting(custom.greetingMessage || '');
+    setFormBadge(custom.badge || 'CUSTOM');
+    setMediaCards(
+      custom.mediaCards.custom && custom.mediaCards.custom.length > 0
+        ? custom.mediaCards.custom.map(c => ({
+            imageUrl: c.imageUrl,
+            title: c.title,
+            subtitle: c.subtitle,
+            actionButtonLabel: c.actionButtonLabel,
+          }))
+        : [
+            {
+              imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&q=80',
+              title: 'Featured Service',
+              subtitle: 'Custom Package',
+              actionButtonLabel: 'Inquire Now',
+            },
+          ]
+    );
+    setIsCreateModalOpen(true);
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim() || !formAgentName.trim() || !formInstructions.trim()) {
@@ -118,8 +172,14 @@ export function DynamicDomainPersonaSwitcher({
       mediaCards: customCards,
     };
 
-    createCustomDomain(payload);
+    if (editingDomainId) {
+      updateCustomDomain(editingDomainId, payload);
+    } else {
+      createCustomDomain(payload);
+    }
+
     setIsCreateModalOpen(false);
+    setEditingDomainId(null);
 
     // Reset form
     setFormTitle('');
@@ -165,7 +225,7 @@ export function DynamicDomainPersonaSwitcher({
 
         <button
           type="button"
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={openCreateModal}
           className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:opacity-95 active:scale-95 self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" />
@@ -187,35 +247,53 @@ export function DynamicDomainPersonaSwitcher({
               type="button"
               onClick={() => setActiveDomain(id)}
               className={cn(
-                'group relative flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 backdrop-blur-sm',
+                'group relative flex flex-col justify-between rounded-2xl border p-4 text-left transition-all duration-300 backdrop-blur-sm cursor-pointer',
                 isSelected
-                  ? cn('border-opacity-80 shadow-lg', domain.borderColor, domain.accentBg, 'ring-1 ring-white/10')
+                  ? cn(
+                      'scale-[1.02] ring-2 shadow-lg border-opacity-100',
+                      domain.borderColor,
+                      domain.accentBg,
+                      id === 'healthcare' && 'ring-emerald-500/60 shadow-[0_0_24px_rgba(16,185,129,0.3)] border-emerald-500/70',
+                      id === 'realestate' && 'ring-amber-500/60 shadow-[0_0_24px_rgba(245,158,11,0.3)] border-amber-500/70',
+                      id === 'ecommerce' && 'ring-indigo-500/60 shadow-[0_0_24px_rgba(99,102,241,0.3)] border-indigo-500/70'
+                    )
                   : 'border-border/60 bg-card/30 hover:border-white/20 hover:bg-card/50'
               )}
             >
-              <div className="flex w-full items-center justify-between mb-2">
-                <div
-                  className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-xl border bg-background/80 shadow-sm',
-                    isSelected ? cn(domain.borderColor, domain.color) : 'border-border text-muted-foreground'
+              <div className="w-full">
+                <div className="flex w-full items-center justify-between mb-2.5">
+                  <div
+                    className={cn(
+                      'flex h-9 w-9 items-center justify-center rounded-xl border bg-background/80 shadow-sm transition-colors',
+                      isSelected ? cn(domain.borderColor, domain.color) : 'border-border text-muted-foreground'
+                    )}
+                  >
+                    {getDomainIcon(id)}
+                  </div>
+                  {isSelected && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-bold text-emerald-400 font-mono tracking-wider shadow-sm animate-pulse">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      ACTIVE
+                    </span>
                   )}
-                >
-                  {getDomainIcon(id)}
                 </div>
-                {isSelected && (
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                )}
+
+                <span className={cn('text-[10px] font-mono font-bold uppercase tracking-wider', isSelected ? domain.color : 'text-muted-foreground')}>
+                  {domain.badge}
+                </span>
+                <h4 className="text-xs font-bold text-foreground mt-0.5 truncate w-full">
+                  {domain.title}
+                </h4>
+                <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
+                  {domain.personaName}
+                </p>
               </div>
 
-              <span className={cn('text-[10px] font-mono font-bold uppercase tracking-wider', isSelected ? domain.color : 'text-muted-foreground')}>
-                {domain.badge}
-              </span>
-              <h4 className="text-xs font-bold text-foreground mt-0.5 truncate w-full">
-                {domain.title}
-              </h4>
-              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
-                {domain.personaName}
-              </p>
+              {isSelected && (
+                <span className={cn('mt-2.5 flex items-center gap-1 text-[9px] font-bold', domain.color)}>
+                  <CheckCircle2 className="h-3 w-3" /> Active Persona
+                </span>
+              )}
             </button>
           );
         })}
@@ -227,31 +305,51 @@ export function DynamicDomainPersonaSwitcher({
             <div
               key={custom.id}
               className={cn(
-                'group relative flex flex-col justify-between rounded-2xl border p-4 text-left transition-all duration-200 backdrop-blur-sm cursor-pointer',
+                'group relative flex flex-col justify-between rounded-2xl border p-4 text-left transition-all duration-300 backdrop-blur-sm cursor-pointer',
                 isSelected
-                  ? 'border-violet-500/70 bg-violet-500/10 shadow-lg ring-1 ring-violet-500/30'
+                  ? 'border-violet-500/80 bg-violet-500/10 shadow-[0_0_24px_rgba(139,92,246,0.3)] ring-2 ring-violet-500/60 scale-[1.02]'
                   : 'border-border/60 bg-card/30 hover:border-violet-500/40 hover:bg-card/50'
               )}
               onClick={() => setActiveDomain(custom.id)}
             >
-              <div>
-                <div className="flex w-full items-center justify-between mb-2">
+              <div className="w-full">
+                <div className="flex w-full items-center justify-between mb-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-500/40 bg-background/80 text-violet-400 shadow-sm">
                     <Sparkles className="h-4 w-4" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`Delete custom domain "${custom.title}"?`)) {
-                        deleteCustomDomain(custom.id);
-                      }
-                    }}
-                    className="opacity-0 group-hover:opacity-100 rounded-md p-1 text-muted-foreground/60 hover:text-rose-400 hover:bg-rose-500/10 transition"
-                    title="Delete domain"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {isSelected && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-bold text-emerald-400 font-mono tracking-wider shadow-sm animate-pulse mr-0.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        ACTIVE
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(custom);
+                      }}
+                      className="rounded-lg p-1.5 text-muted-foreground/70 hover:text-indigo-300 hover:bg-indigo-500/15 transition"
+                      title="Edit custom persona"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Delete custom domain "${custom.title}"?`)) {
+                          deleteCustomDomain(custom.id);
+                        }
+                      }}
+                      className="rounded-lg p-1.5 text-muted-foreground/70 hover:text-rose-400 hover:bg-rose-500/15 transition"
+                      title="Delete custom domain"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-violet-400">
@@ -266,7 +364,7 @@ export function DynamicDomainPersonaSwitcher({
               </div>
 
               {isSelected && (
-                <span className="mt-2 flex items-center gap-1 text-[9px] font-bold text-violet-300">
+                <span className="mt-2.5 flex items-center gap-1 text-[9px] font-bold text-violet-300">
                   <CheckCircle2 className="h-3 w-3 text-violet-400" /> Active Persona
                 </span>
               )}
@@ -277,7 +375,7 @@ export function DynamicDomainPersonaSwitcher({
         {/* Quick Add Custom Card */}
         <button
           type="button"
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={openCreateModal}
           className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card/10 p-4 text-center text-muted-foreground hover:border-indigo-500/60 hover:text-indigo-400 hover:bg-card/25 transition-all group"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted/40 group-hover:bg-indigo-500/15 group-hover:text-indigo-400 transition mb-1.5">
@@ -455,19 +553,26 @@ export function DynamicDomainPersonaSwitcher({
             <div className="flex items-center justify-between border-b border-border/60 bg-card/60 px-6 py-4 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400">
-                  <Sparkles className="h-5 w-5" />
+                  {editingDomainId ? <Pencil className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-foreground">Create Custom Domain &amp; Persona</h3>
+                  <h3 className="text-base font-bold text-foreground">
+                    {editingDomainId ? 'Edit Custom Domain & Persona' : 'Create Custom Domain & Persona'}
+                  </h3>
                   <p className="text-xs text-muted-foreground">
-                    Define agent role, custom prompt instructions, language/accent, and rich media cards
+                    {editingDomainId
+                      ? 'Update agent role, prompt instructions, language/accent, and rich media cards'
+                      : 'Define agent role, custom prompt instructions, language/accent, and rich media cards'}
                   </p>
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setEditingDomainId(null);
+                }}
                 className="rounded-xl border border-border p-2 text-muted-foreground hover:bg-muted/40 hover:text-foreground transition"
               >
                 <X className="h-4 w-4" />
@@ -693,7 +798,10 @@ export function DynamicDomainPersonaSwitcher({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60">
                 <button
                   type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    setEditingDomainId(null);
+                  }}
                   className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/40 transition"
                 >
                   Cancel
@@ -702,8 +810,8 @@ export function DynamicDomainPersonaSwitcher({
                   type="submit"
                   className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-xs font-bold text-white shadow-xl shadow-indigo-500/25 transition hover:opacity-95 active:scale-95"
                 >
-                  <Sparkles className="h-4 w-4" />
-                  Save &amp; Activate Persona
+                  {editingDomainId ? <CheckCircle2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  {editingDomainId ? 'Save Changes' : 'Save & Activate Persona'}
                 </button>
               </div>
             </form>

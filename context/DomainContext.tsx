@@ -32,6 +32,7 @@ interface DomainContextType {
   activeDomainMetadata: DomainMetadata;
   setActiveDomain: (id: DomainId) => void;
   createCustomDomain: (input: CreateCustomDomainInput) => DomainMetadata;
+  updateCustomDomain: (id: string, input: CreateCustomDomainInput) => DomainMetadata;
   deleteCustomDomain: (id: string) => void;
 }
 
@@ -108,6 +109,49 @@ export function DomainProvider({ children }: { children: ReactNode }) {
     return newDomain;
   };
 
+  const updateCustomDomain = (id: string, input: CreateCustomDomainInput): DomainMetadata => {
+    const existingCustom = getCustomDomains();
+    const oldDomain = existingCustom[id] || {};
+
+    const updatedDomain: DomainMetadata = {
+      ...oldDomain,
+      id,
+      title: input.title.trim(),
+      subtitle: input.subtitle?.trim() || `${input.personaName} — Custom Specialist`,
+      tagline: 'Custom AI Voice Domain Specialist',
+      badge: input.badge?.trim().toUpperCase() || 'CUSTOM AI',
+      color: 'text-violet-400',
+      borderColor: 'border-violet-500/40',
+      gradient: 'from-violet-500/15 via-purple-600/10 to-transparent',
+      accentBg: 'bg-violet-500/10',
+      personaName: input.personaName.trim(),
+      personaTitle: input.personaTitle.trim(),
+      greetingMessage:
+        input.greetingMessage?.trim() ||
+        `Hello! I am ${input.personaName}, your ${input.personaTitle}. How can I assist you today?`,
+      sampleUserPrompts: [
+        `What can you help me with in ${input.title}?`,
+        `Tell me about your services and requirements.`,
+      ],
+      isCustom: true,
+      customInstructions: input.customInstructions.trim(),
+      languagePreference: input.languagePreference || 'Multi-lingual automatic detection',
+      accentPreference: input.accentPreference || 'Natural conversational',
+      mediaCards: {
+        custom: input.mediaCards || [],
+      },
+    };
+
+    const updatedCustoms = { ...existingCustom, [id]: updatedDomain };
+    saveCustomDomains(updatedCustoms);
+
+    const updatedAll = { ...DOMAIN_PRESETS, ...updatedCustoms };
+    setAllDomains(updatedAll);
+    handleSetActiveDomain(id);
+
+    return updatedDomain;
+  };
+
   const deleteCustomDomain = (id: string) => {
     const existingCustom = getCustomDomains();
     if (!existingCustom[id]) return;
@@ -133,6 +177,7 @@ export function DomainProvider({ children }: { children: ReactNode }) {
         activeDomainMetadata,
         setActiveDomain: handleSetActiveDomain,
         createCustomDomain,
+        updateCustomDomain,
         deleteCustomDomain,
       }}
     >
