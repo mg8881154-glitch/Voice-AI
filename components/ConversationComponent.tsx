@@ -484,6 +484,7 @@ export default function ConversationComponent({
       agentState={agentState}
       channelName={agoraData.channel}
       agentUid={String(DEFAULT_AGENT_UID)}
+      transcript={transcript}
       statusPanel={        <ConnectionStatusPanel
           connectionState={connectionState}
           connectionSeverity={connectionSeverity}

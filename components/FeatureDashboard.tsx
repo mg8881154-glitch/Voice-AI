@@ -17,12 +17,18 @@ import {
   ClipboardList, Settings, ChevronDown, Bell,
   Play, Headphones, Eye,
   Circle, ExternalLink, User, Zap,
+  BookOpen, Sliders, ShieldCheck,
 } from 'lucide-react';
 import { VideoCallComponent }   from './VideoCallComponent';
 import { LiveDemoComponent }    from './LiveDemoComponent';
 import { LiveCaptionsOverlay }  from './LiveCaptionsOverlay';
 import { ChatPanel }            from './ChatPanel';
 import { RecordingControls }    from './RecordingControls';
+import { KnowledgeBaseModal }   from './KnowledgeBaseModal';
+import { VoicePersonaSelectorModal } from './VoicePersonaSelector';
+import { PreSessionPreviewModal } from './PreSessionPreviewModal';
+import { VisualPerformanceCharts } from './VisualPerformanceCharts';
+import { CrmSyncCenter }        from './CrmSyncCenter';
 import { cn } from '@/lib/utils';
 
 const AIAgentLauncher = dynamic(() => import('./AIAgentLauncher'), { ssr: false });
@@ -31,6 +37,7 @@ const AIAgentLauncher = dynamic(() => import('./AIAgentLauncher'), { ssr: false 
 
 type FeatureId = 'video' | 'demo' | 'ai-agent' | 'transcription' | 'chat' | 'recording';
 type NavPage   = 'dashboard' | 'analytics' | 'call-logs' | 'settings';
+type FeatureCategory = 'all' | 'ai' | 'video' | 'data';
 
 interface StatusIndicator {
   label: string;
@@ -40,6 +47,7 @@ interface StatusIndicator {
 
 interface Feature {
   id: FeatureId;
+  category: 'ai' | 'video' | 'data';
   icon: React.ReactNode;
   title: string;
   subtitle: string;
@@ -49,85 +57,260 @@ interface Feature {
   borderGlow: string;
   gradient: string;
   status: StatusIndicator;
+  metric?: string;
 }
 
 // ─── Feature definitions ──────────────────────────────────────────────────────
 
 const FEATURES: Feature[] = [
   {
+    id: 'ai-agent',
+    category: 'ai',
+    icon: <Sparkles className="h-6 w-6" />,
+    title: 'AI Voice Sales Agent',
+    subtitle: 'Nova — autonomous sub-second voice agent for enterprise sales qualification',
+    cta: 'Launch Nova',
+    badge: 'AI CORE',
+    color: 'text-indigo-400',
+    borderGlow: 'hover:border-indigo-500/60 hover:shadow-indigo-500/20',
+    gradient: 'from-indigo-500/15 via-violet-600/10 to-transparent',
+    status: { label: 'Agent Ready', color: 'green', pulse: true },
+    metric: '⚡ 380ms Latency',
+  },
+  {
     id: 'video',
+    category: 'video',
     icon: <Video className="h-6 w-6" />,
     title: '1-on-1 Video Call',
-    subtitle: 'HD audio & video with screen share and recording',
-    cta: 'Start Call',
+    subtitle: 'Ultra-low latency HD audio & video with screen share & cloud recording',
+    cta: 'Start Video',
     color: 'text-blue-400',
-    borderGlow: 'hover:border-blue-500/60 hover:shadow-blue-500/10',
-    gradient: 'from-blue-500/10 to-blue-600/5',
-    status: { label: 'Ready', color: 'green', pulse: false },
+    borderGlow: 'hover:border-blue-500/60 hover:shadow-blue-500/20',
+    gradient: 'from-blue-500/15 via-cyan-600/10 to-transparent',
+    status: { label: 'RTC Active', color: 'green', pulse: false },
+    metric: '1080p 60fps',
   },
   {
     id: 'demo',
+    category: 'video',
     icon: <Radio className="h-6 w-6" />,
     title: 'Live Product Demo',
-    subtitle: 'Stream to multiple clients with live chat & Q&A',
+    subtitle: '1-to-many interactive broadcast with live chat and real-time audience Q&A',
     cta: 'Go Live',
-    badge: 'LIVE',
+    badge: 'LIVE ON AIR',
     color: 'text-red-400',
-    borderGlow: 'hover:border-red-500/60 hover:shadow-red-500/10',
-    gradient: 'from-red-500/10 to-red-600/5',
-    status: { label: 'Stream Ready', color: 'green', pulse: false },
-  },
-  {
-    id: 'ai-agent',
-    icon: <Sparkles className="h-6 w-6" />,
-    title: 'AI Voice Sales Agent',
-    subtitle: 'Nova — intelligent real-time voice agent',
-    cta: 'Launch Agent',
-    badge: 'AI',
-    color: 'text-indigo-400',
-    borderGlow: 'hover:border-indigo-500/60 hover:shadow-indigo-500/10',
-    gradient: 'from-indigo-500/10 to-violet-600/5',
-    status: { label: 'Agent Ready', color: 'green', pulse: true },
+    borderGlow: 'hover:border-red-500/60 hover:shadow-red-500/20',
+    gradient: 'from-red-500/15 via-rose-600/10 to-transparent',
+    status: { label: 'Stream Ready', color: 'green', pulse: true },
+    metric: '142 Listening',
   },
   {
     id: 'transcription',
+    category: 'ai',
     icon: <FileText className="h-6 w-6" />,
     title: 'Live Transcription',
-    subtitle: 'Real-time captions, speaker detection & export',
-    cta: 'Open Transcript',
+    subtitle: 'Real-time captions, speaker diarization, keyword triggers & instant export',
+    cta: 'View STT Stream',
     color: 'text-emerald-400',
-    borderGlow: 'hover:border-emerald-500/60 hover:shadow-emerald-500/10',
-    gradient: 'from-emerald-500/10 to-emerald-600/5',
-    status: { label: 'STT Online', color: 'green', pulse: false },
+    borderGlow: 'hover:border-emerald-500/60 hover:shadow-emerald-500/20',
+    gradient: 'from-emerald-500/15 via-teal-600/10 to-transparent',
+    status: { label: 'Deepgram Online', color: 'green', pulse: false },
+    metric: '99.4% Accuracy',
   },
   {
     id: 'chat',
+    category: 'data',
     icon: <MessageSquare className="h-6 w-6" />,
     title: 'Chat & Presence',
-    subtitle: 'Real-time messaging with online/offline tracking',
-    cta: 'Open Chat',
+    subtitle: 'Agora RTM bidirectional messaging with instant typing indicators & user presence',
+    cta: 'Open Channel',
     color: 'text-amber-400',
-    borderGlow: 'hover:border-amber-500/60 hover:shadow-amber-500/10',
-    gradient: 'from-amber-500/10 to-amber-600/5',
-    status: { label: '3 Online', color: 'amber', pulse: true },
+    borderGlow: 'hover:border-amber-500/60 hover:shadow-amber-500/20',
+    gradient: 'from-amber-500/15 via-orange-600/10 to-transparent',
+    status: { label: 'RTM Connected', color: 'amber', pulse: true },
+    metric: '3 Reps Active',
   },
   {
     id: 'recording',
+    category: 'data',
     icon: <Circle className="h-6 w-6 fill-current" />,
-    title: 'Call Recording',
-    subtitle: 'Cloud recording saved to S3 with playback',
-    cta: 'View Logs',
+    title: 'Call Recording & S3',
+    subtitle: 'Encrypted composite call recording securely saved to AWS S3 with timeline playback',
+    cta: 'Access Archive',
     color: 'text-rose-400',
-    borderGlow: 'hover:border-rose-500/60 hover:shadow-rose-500/10',
-    gradient: 'from-rose-500/10 to-rose-600/5',
-    status: { label: 'S3 Connected', color: 'blue', pulse: false },
+    borderGlow: 'hover:border-rose-500/60 hover:shadow-rose-500/20',
+    gradient: 'from-rose-500/15 via-pink-600/10 to-transparent',
+    status: { label: 'S3 Encrypted', color: 'blue', pulse: false },
+    metric: 'Cloud Archive',
   },
 ];
+
+// ─── Feature Card Interactive Mini-Previews ────────────────────────────────────
+
+function FeatureCardPreview({ id }: { id: FeatureId }) {
+  switch (id) {
+    case 'ai-agent':
+      return (
+        <div className="my-3 rounded-xl border border-indigo-500/25 bg-indigo-950/40 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
+              VOICE CORE STREAM
+            </span>
+            <span className="text-[10px] font-mono font-bold text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded-full border border-indigo-500/30">
+              ~380ms
+            </span>
+          </div>
+          {/* Animated equalizer waves */}
+          <div className="flex items-center justify-center gap-1.5 h-9 px-3 bg-black/50 rounded-lg border border-white/5">
+            <span className="w-1 rounded-full bg-indigo-400 animate-equalizer-1" />
+            <span className="w-1 rounded-full bg-indigo-300 animate-equalizer-2" />
+            <span className="w-1 rounded-full bg-violet-400 animate-equalizer-3" />
+            <span className="w-1 rounded-full bg-violet-300 animate-equalizer-4" />
+            <span className="w-1 rounded-full bg-indigo-400 animate-equalizer-5" />
+            <span className="w-1 rounded-full bg-indigo-300 animate-equalizer-2" />
+            <span className="w-1 rounded-full bg-violet-400 animate-equalizer-1" />
+          </div>
+          <p className="mt-2 text-[10px] text-indigo-200/70 font-medium truncate">
+            &quot;Nova speaks English, Hindi &amp; Hinglish with zero lag&quot;
+          </p>
+        </div>
+      );
+
+    case 'video':
+      return (
+        <div className="my-3 rounded-xl border border-blue-500/25 bg-blue-950/40 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+              HD VIEWFINDER
+            </span>
+            <span className="text-[10px] font-mono font-bold text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-full border border-blue-500/30">
+              1080p 60fps
+            </span>
+          </div>
+          <div className="relative h-9 rounded-lg bg-black/50 flex items-center justify-between px-3 border border-white/5">
+            <span className="text-[10px] font-mono text-blue-200/90 font-medium">Screen Share • Active</span>
+            <div className="flex items-center gap-1">
+              <span className="h-3 w-1 rounded-full bg-blue-400 animate-pulse" />
+              <span className="h-2 w-1 rounded-full bg-blue-400/60" />
+              <span className="h-4.5 w-1 rounded-full bg-blue-400 animate-pulse" />
+            </div>
+          </div>
+          <p className="mt-2 text-[10px] text-blue-200/70 font-medium truncate">
+            Ultra-reliable Agora WebRTC media pipeline
+          </p>
+        </div>
+      );
+
+    case 'demo':
+      return (
+        <div className="my-3 rounded-xl border border-red-500/25 bg-red-950/40 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
+              RADAR BROADCAST
+            </span>
+            <span className="text-[10px] font-mono font-bold text-red-300 bg-red-500/20 px-2 py-0.5 rounded-full border border-red-500/30">
+              142 Live
+            </span>
+          </div>
+          <div className="relative h-9 rounded-lg bg-black/50 flex items-center justify-center overflow-hidden border border-white/5">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-14 w-14 rounded-full border border-red-500/30 animate-ping opacity-30" />
+              <div className="h-7 w-7 rounded-full border border-red-400/60" />
+            </div>
+            <span className="relative z-10 text-[10px] font-semibold text-red-200">Interactive Q&amp;A Active</span>
+          </div>
+          <p className="mt-2 text-[10px] text-red-200/70 font-medium truncate">
+            Sub-second global audience synchronization
+          </p>
+        </div>
+      );
+
+    case 'transcription':
+      return (
+        <div className="my-3 rounded-xl border border-emerald-500/25 bg-emerald-950/40 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              LIVE STREAM STT
+            </span>
+            <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+              99.4%
+            </span>
+          </div>
+          <div className="h-9 rounded-lg bg-black/50 flex items-center px-3 border border-white/5">
+            <p className="text-[10px] text-emerald-200 font-mono truncate">
+              &gt; Nova: &quot;Yes, we push qualified leads to Salesforce...&quot;
+            </p>
+          </div>
+          <p className="mt-2 text-[10px] text-emerald-200/70 font-medium truncate">
+            Deepgram Nova-2 dual-channel speech recognition
+          </p>
+        </div>
+      );
+
+    case 'chat':
+      return (
+        <div className="my-3 rounded-xl border border-amber-500/25 bg-amber-950/40 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
+              RTM CHANNELS
+            </span>
+            <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
+              3 Online
+            </span>
+          </div>
+          <div className="h-9 rounded-lg bg-black/50 flex items-center justify-between px-3 border border-white/5">
+            <div className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+            <span className="text-[10px] font-mono text-amber-200/90 font-medium">Prospect is typing…</span>
+          </div>
+          <p className="mt-2 text-[10px] text-amber-200/70 font-medium truncate">
+            Low-latency bidirectional data synchronization
+          </p>
+        </div>
+      );
+
+    case 'recording':
+      return (
+        <div className="my-3 rounded-xl border border-rose-500/25 bg-rose-950/40 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-rose-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+              S3 VAULT
+            </span>
+            <span className="text-[10px] font-mono font-bold text-rose-300 bg-rose-500/20 px-2 py-0.5 rounded-full border border-rose-500/30">
+              MP4 · AAC
+            </span>
+          </div>
+          <div className="h-9 rounded-lg bg-black/50 flex items-center justify-between px-3 border border-white/5">
+            <div className="flex items-center gap-2">
+              <Play className="h-3 w-3 text-rose-400 fill-rose-400" />
+              <div className="h-1.5 w-24 rounded-full bg-white/10 overflow-hidden">
+                <div className="h-full w-2/3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full" />
+              </div>
+            </div>
+            <span className="text-[10px] font-mono text-rose-200/90 font-medium">04:32</span>
+          </div>
+          <p className="mt-2 text-[10px] text-rose-200/70 font-medium truncate">
+            Encrypted composite recording saved to S3 bucket
+          </p>
+        </div>
+      );
+  }
+}
 
 // ─── Nav links ────────────────────────────────────────────────────────────────
 
 const NAV_LINKS: { id: NavPage; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard',  label: 'Dashboard',  icon: <LayoutDashboard className="h-4 w-4" /> },
+
   { id: 'analytics',  label: 'Analytics',  icon: <BarChart2 className="h-4 w-4" /> },
   { id: 'call-logs',  label: 'Call Logs',  icon: <ClipboardList className="h-4 w-4" /> },
   { id: 'settings',   label: 'Settings',   icon: <Settings className="h-4 w-4" /> },
@@ -300,6 +483,11 @@ function AnalyticsPage() {
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-3 rounded-sm bg-primary/60" />Calls</span>
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="h-2 w-3 rounded-sm bg-emerald-500/50" />Leads</span>
         </div>
+      </div>
+
+      {/* Interactive SVG Performance Analytics & Qualification Funnel */}
+      <div className="mt-8">
+        <VisualPerformanceCharts />
       </div>
     </main>
   );
@@ -554,6 +742,11 @@ function SettingsPage() {
               </div>
             ))}
           </div>
+
+          {/* Direct 1-Click CRM Sync Center with Field Mapping */}
+          <div className="mt-6 pt-4 border-t border-border/60">
+            <CrmSyncCenter />
+          </div>
         </div>
       </div>
 
@@ -579,9 +772,13 @@ function SettingsPage() {
 export function FeatureDashboard() {
   const [activeFeature, setActiveFeature] = useState<FeatureId | null>(null);
   const [activePage, setActivePage]       = useState<NavPage>('dashboard');
+  const [selectedCategory, setSelectedCategory] = useState<FeatureCategory>('all');
   const [profileOpen, setProfileOpen]     = useState(false);
   const [notifOpen, setNotifOpen]         = useState(false);
   const [fabOpen, setFabOpen]             = useState(false);
+  const [ragModalOpen, setRagModalOpen]   = useState(false);
+  const [personaModalOpen, setPersonaModalOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   // ── Notifications state ──────────────────────────────────────────────────
   const [notifications, setNotifications] = useState([
@@ -660,7 +857,7 @@ export function FeatureDashboard() {
 
   // ── Dashboard home ──────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground cyber-mesh-bg">
 
       {/* ── Navigation Header ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 flex shrink-0 items-center justify-between border-b border-border/60 bg-background/90 px-4 py-0 backdrop-blur-xl md:px-8">
@@ -704,6 +901,34 @@ export function FeatureDashboard() {
 
         {/* RIGHT: Notifications + Profile + New Call */}
         <div className="flex items-center gap-2">
+
+          {/* Quick Config & System Check */}
+          <button
+            onClick={() => setRagModalOpen(true)}
+            className="hidden lg:flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+            title="Dynamic Knowledge Base (RAG)"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Knowledge Base</span>
+          </button>
+
+          <button
+            onClick={() => setPersonaModalOpen(true)}
+            className="hidden lg:flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5 text-xs font-semibold text-violet-400 hover:bg-violet-500/20 transition-colors"
+            title="AI Voice & Persona Config"
+          >
+            <Sliders className="h-3.5 w-3.5" />
+            <span>Voice &amp; Persona</span>
+          </button>
+
+          <button
+            onClick={() => setPreviewModalOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 transition-colors"
+            title="Pre-Flight System Check"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
+            <span>System Check</span>
+          </button>
 
           {/* ── Notification bell + dropdown ─────────────────────────────── */}
           <div className="relative">
@@ -878,51 +1103,201 @@ export function FeatureDashboard() {
       {activePage === 'call-logs' && <CallLogsPage />}
       {activePage === 'settings'  && <SettingsPage />}
       {activePage === 'dashboard' && (
-        <main className="flex-1 px-4 py-8 md:px-8">
+        <main className="flex-1 px-4 py-8 md:px-8 max-w-7xl mx-auto w-full">
           {/* Page title row */}
-          <div className="mb-8 flex items-end justify-between">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h2>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                  Global RTN Connected · 32ms RTT
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                Voice AI &amp; Real-Time Center
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Powered by Agora RTC · RTM · Conversational AI Engine
+                Powered by Agora SD-RTN™ · RTM Data Channels · Conversational AI Engine
               </p>
             </div>
-            {/* Quick stats */}
-            <div className="hidden lg:flex items-center gap-6">
+            {/* Quick stats pills */}
+            <div className="flex items-center gap-3">
               {[
-                { label: 'Active Sessions', value: '2', color: 'text-emerald-400' },
-                { label: 'Calls Today', value: '14', color: 'text-blue-400' },
-                { label: 'Leads Captured', value: '7', color: 'text-indigo-400' },
+                { label: 'Active Sessions', value: '2 Live', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+                { label: 'Calls Today', value: '14 Calls', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+                { label: 'Leads Captured', value: '7 Leads', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
               ].map(stat => (
-                <div key={stat.label} className="text-right">
-                  <p className={cn('text-xl font-bold', stat.color)}>{stat.value}</p>
-                  <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+                <div key={stat.label} className={cn('rounded-xl border px-3 py-1.5 text-right', stat.bg)}>
+                  <p className={cn('text-sm font-bold leading-none', stat.color)}>{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Feature grid */}
+          {/* ── Nova AI Voice Core Hero Spotlight ── */}
+          <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/15 glass-panel-elevated p-6 sm:p-8">
+            {/* Ambient glowing radial lights */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl animate-glow-shift" />
+            <div className="pointer-events-none absolute -left-16 -bottom-16 h-72 w-72 rounded-full bg-violet-600/15 blur-3xl animate-glow-shift" style={{ animationDelay: '2.5s' }} />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="max-w-2xl space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1 text-xs font-bold text-indigo-300">
+                  <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                  <span>NOVA CONVERSATIONAL AI ENGINE</span>
+                  <span className="h-1 w-1 rounded-full bg-indigo-400" />
+                  <span className="text-emerald-400">SUB-500MS VAD</span>
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                  Autonomous AI Voice Sales Agent
+                </h1>
+
+                <p className="text-sm leading-relaxed text-slate-300">
+                  Engage prospects with natural, ultra-low latency voice conversations in English, Hindi, and Hinglish. Nova autonomously qualifies leads, negotiates objections, and books demos directly into your CRM.
+                </p>
+
+                {/* Suggested live prompts */}
+                <div className="pt-1">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Instant Discussion Starters:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { label: 'Enterprise Pricing & ROI', color: 'hover:border-indigo-400' },
+                      { label: 'Objection Handling', color: 'hover:border-violet-400' },
+                      { label: 'Book Demo for Tomorrow', color: 'hover:border-emerald-400' },
+                    ].map(p => (
+                      <button
+                        key={p.label}
+                        onClick={() => setActiveFeature('ai-agent')}
+                        className={cn(
+                          'rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition-all hover:bg-white/10',
+                          p.color
+                        )}
+                      >
+                        💬 {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* RAG & Persona quick access bar */}
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <button
+                    onClick={() => setRagModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-all"
+                  >
+                    <BookOpen className="h-3.5 w-3.5 text-emerald-400" />
+                    RAG Knowledge Base
+                  </button>
+                  <button
+                    onClick={() => setPersonaModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 transition-all"
+                  >
+                    <Sliders className="h-3.5 w-3.5 text-violet-400" />
+                    Custom AI Voice &amp; Persona
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Interactive Voice Orb & CTA */}
+              <div className="flex flex-col items-center sm:items-end gap-4 w-full lg:w-auto shrink-0">
+                {/* Visualizer Sphere Mockup with Equalizer */}
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/50 p-4 shadow-xl backdrop-blur-md">
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/30 animate-orb-pulse">
+                    <Headphones className="h-7 w-7 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Nova Core 2.5</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <div className="flex items-center gap-0.5 h-3">
+                        <span className="w-0.5 rounded-full bg-indigo-400 animate-equalizer-1" />
+                        <span className="w-0.5 rounded-full bg-violet-400 animate-equalizer-2" />
+                        <span className="w-0.5 rounded-full bg-indigo-300 animate-equalizer-3" />
+                        <span className="w-0.5 rounded-full bg-cyan-400 animate-equalizer-4" />
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 font-semibold">Active &amp; Ready</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Deepgram + GPT-4o + MiniMax</p>
+                  </div>
+                </div>
+
+                {/* Direct One-Click Launch & Pre-Flight Check Button */}
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                  <button
+                    onClick={() => setPreviewModalOpen(true)}
+                    className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-xs font-bold text-white transition-all hover:bg-white/15"
+                  >
+                    <ShieldCheck className="h-4 w-4 text-indigo-400" />
+                    Pre-Flight Check
+                  </button>
+
+                  <button
+                    onClick={() => setActiveFeature('ai-agent')}
+                    className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/25 transition-all hover:scale-[1.03] active:scale-100"
+                    style={{ background: 'linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(258 90% 66%) 100%)' }}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Speak to Nova Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Category Filter Pills ── */}
+          <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-1">
+            {[
+              { id: 'all', label: 'All Capabilities', count: FEATURES.length },
+              { id: 'ai', label: 'Voice & AI', count: 2 },
+              { id: 'video', label: 'Live Video & Demo', count: 2 },
+              { id: 'data', label: 'CRM & Storage', count: 2 },
+            ].map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id as FeatureCategory)}
+                className={cn(
+                  'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all',
+                  selectedCategory === cat.id
+                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                    : 'border border-white/10 bg-card/40 text-slate-400 hover:border-white/20 hover:text-white',
+                )}
+              >
+                <span>{cat.label}</span>
+                <span className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                  selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-400'
+                )}>
+                  {cat.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* ── Feature grid ── */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature, idx) => (
+            {FEATURES
+              .filter(f => selectedCategory === 'all' || f.category === selectedCategory)
+              .map((feature, idx) => (
               <div
                 key={feature.id}
                 className={cn(
-                  'group relative flex flex-col rounded-2xl border border-border/60 bg-gradient-to-br overflow-hidden transition-all duration-200 hover:shadow-xl hover:shadow-black/25 hover:scale-[1.015] hover:-translate-y-0.5 active:scale-100 active:translate-y-0',
-                  feature.gradient,
+                  'glass-card-interactive group flex flex-col rounded-2xl overflow-hidden',
                   feature.borderGlow,
                 )}
                 style={{ animationDelay: `${idx * 50}ms` }}
               >
                 {/* Subtle top glow line on hover */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                 {/* Card body */}
                 <div className="flex flex-1 flex-col p-5">
                   {/* Top row: icon + status + badge */}
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between mb-3">
                     <div className={cn(
-                      'flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-background/60 shadow-sm transition-transform group-hover:scale-110',
+                      'flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-inner transition-transform group-hover:scale-110',
                       feature.color,
                     )}>
                       {feature.icon}
@@ -931,8 +1306,8 @@ export function FeatureDashboard() {
                       {feature.badge && (
                         <span className={cn(
                           'rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide',
-                          feature.badge === 'AI'   ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/20' :
-                          feature.badge === 'LIVE' ? 'bg-red-500/20 text-red-400 border border-red-500/20' :
+                          feature.badge === 'AI CORE'   ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' :
+                          feature.badge === 'LIVE ON AIR' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
                           'bg-primary/20 text-primary',
                         )}>
                           {feature.badge}
@@ -944,17 +1319,20 @@ export function FeatureDashboard() {
 
                   {/* Title + subtitle */}
                   <h3 className="text-sm font-bold text-foreground leading-snug">{feature.title}</h3>
-                  <p className="mt-1.5 flex-1 text-xs text-muted-foreground leading-relaxed">{feature.subtitle}</p>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed line-clamp-2">{feature.subtitle}</p>
 
-                  {/* Bottom row: feature number + CTA */}
-                  <div className="mt-5 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-muted-foreground/25 tabular-nums">
-                      {String(idx + 1).padStart(2, '0')}
+                  {/* Feature Card Interactive Mini Preview */}
+                  <FeatureCardPreview id={feature.id} />
+
+                  {/* Bottom row: metric chip + CTA */}
+                  <div className="mt-auto pt-3 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-400 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
+                      {feature.metric}
                     </span>
                     <button
                       onClick={() => setActiveFeature(feature.id)}
                       className={cn(
-                        'flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all',
+                        'flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-100',
                         CTA_STYLES[feature.id],
                       )}
                     >
@@ -968,20 +1346,24 @@ export function FeatureDashboard() {
           </div>
 
           {/* Bottom info strip */}
-          <div className="mt-8 flex items-center justify-between rounded-2xl border border-border/60 bg-card/20 px-5 py-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-2xl border border-white/10 glass-panel px-5 py-4 gap-3">
             <div className="flex items-center gap-3">
               <Zap className="h-4 w-4 text-indigo-400 shrink-0" />
               <div>
-                <p className="text-xs font-semibold text-foreground">All systems operational</p>
-                <p className="text-[11px] text-muted-foreground">Agora RTC · RTM · AI Engine · S3 Storage</p>
+                <p className="text-xs font-bold text-foreground">Agora Intelligent Real-Time Fabric</p>
+                <p className="text-[11px] text-muted-foreground">Sub-second STT/TTS routing · Global SD-RTN™ coverage · AES-256 encrypted</p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-1.5">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <span className="text-xs font-medium text-emerald-400">Live</span>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="text-slate-400 text-[11px]">VAD Silence: <strong className="text-white">420ms</strong></span>
+              <span className="text-slate-400 text-[11px]">Interruption: <strong className="text-white">120ms</strong></span>
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                <span className="font-semibold text-emerald-400">All Systems Operational</span>
+              </div>
             </div>
           </div>
         </main>

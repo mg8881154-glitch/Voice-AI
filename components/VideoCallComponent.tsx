@@ -12,9 +12,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff,
-  Phone, Monitor, Copy, Check, Users,
+  Phone, Monitor, Copy, Check, Users, Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScreenAnnotationToolbar } from './ScreenAnnotationToolbar';
 import { cn } from '@/lib/utils';
 
 type CallState = 'idle' | 'joining' | 'connected' | 'ended';
@@ -38,6 +39,7 @@ export function VideoCallComponent() {
   const [error, setError]             = useState<string | null>(null);
   const [copied, setCopied]           = useState(false);
   const [duration, setDuration]       = useState(0);
+  const [annotationActive, setAnnotationActive] = useState(false);
 
   const localVideoRef  = useRef<HTMLDivElement>(null);
   const remoteVideoRef = useRef<HTMLDivElement>(null);
@@ -247,6 +249,12 @@ export function VideoCallComponent() {
           ref={remoteVideoRef}
           className="flex-1 rounded-2xl bg-card/50 border border-border/60 overflow-hidden relative flex items-center justify-center"
         >
+          {/* Live Annotation Drawing Canvas Overlay */}
+          <ScreenAnnotationToolbar
+            isActive={annotationActive}
+            onToggleActive={setAnnotationActive}
+          />
+
           {!remoteJoined && (
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/30">
@@ -256,7 +264,7 @@ export function VideoCallComponent() {
               <p className="text-xs text-muted-foreground/60">Share the channel name: <span className="font-mono text-primary">{activeChannel}</span></p>
             </div>
           )}
-          <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-2 py-1 text-xs text-white">
+          <div className="absolute bottom-3 left-3 rounded-lg bg-black/50 px-2 py-1 text-xs text-white z-10">
             {remoteJoined ? 'Client' : 'Remote'}
           </div>
         </div>
@@ -308,6 +316,21 @@ export function VideoCallComponent() {
             {videoMuted ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
           </button>
         )}
+
+        {/* Live Annotation Drawing Toggle */}
+        <button
+          onClick={() => setAnnotationActive(v => !v)}
+          className={cn(
+            'flex h-12 w-12 items-center justify-center rounded-full border transition-all',
+            annotationActive
+              ? 'border-indigo-500 bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
+              : 'border-border bg-muted/30 text-foreground hover:bg-muted'
+          )}
+          aria-label={annotationActive ? 'Disable Annotation' : 'Enable Annotation'}
+          title="Annotate on screen (Pen, Laser, Highlighter)"
+        >
+          <Pencil className="h-5 w-5" />
+        </button>
 
         <button
           className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted/30 text-foreground hover:bg-muted transition-colors"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { CalendarCheck, UserCheck, PhoneOff, Menu, X, Phone } from 'lucide-react';
+import { CalendarCheck, UserCheck, PhoneOff, Menu, X, Phone, Tag, Sparkles } from 'lucide-react';
 import type { AgentState } from 'agora-agent-client-toolkit';
 import { Button } from '@/components/ui/button';
 import { LeadPanel } from './LeadPanel';
@@ -10,6 +10,10 @@ import { EscalationPanel } from './EscalationPanel';
 import { ConversationSummaryPanel } from './ConversationSummaryPanel';
 import { AgentStatusBadge } from './AgentStatusBadge';
 import { PhoneCallModal } from './PhoneCallModal';
+import { DigitalTwinAvatar } from './DigitalTwinAvatar';
+import { LiveSentimentWidget } from './LiveSentimentWidget';
+import { ProductCatalogCards, ProductCatalogModal } from './ProductCatalogCards';
+import { useSentimentAnalyzer } from '@/lib/useSentimentAnalyzer';
 import type { BookingConfirmation } from '@/lib/bookingService';
 import { useLeadStore } from '@/lib/LeadContext';
 import { cn } from '@/lib/utils';
@@ -29,9 +33,12 @@ type QuickstartConversationLayoutProps = {
   imageCard: ReactNode;
   controls: ReactNode;
   onEndConversation: () => void;
+  /** Live conversation transcript used for sentiment & emotion analysis */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transcript?: any[];
 };
 
-type RightPanelTab = 'lead' | 'escalate' | 'summary';
+type RightPanelTab = 'lead' | 'pricing' | 'escalate' | 'summary';
 
 export function QuickstartConversationLayout({
   agentState,
@@ -44,10 +51,14 @@ export function QuickstartConversationLayout({
   imageCard,
   controls,
   onEndConversation,
+  transcript = [],
 }: QuickstartConversationLayoutProps) {
   const { updateLead, lead } = useLeadStore();
+  const sentiment = useSentimentAnalyzer(transcript);
   const [bookDemoOpen, setBookDemoOpen] = useState(false);
   const [phoneCallOpen, setPhoneCallOpen] = useState(false);
+  const [catalogModalOpen, setCatalogModalOpen] = useState(false);
+  const [visualizerMode, setVisualizerMode] = useState<'sphere' | 'avatar'>('sphere');
   const [rightTab, setRightTab] = useState<RightPanelTab>('lead');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connectionState] = useState('CONNECTED'); // optimistic; status dot tracks real value
@@ -78,6 +89,7 @@ export function QuickstartConversationLayout({
 
   const TAB_CONFIG: { id: RightPanelTab; label: string; badge?: string }[] = [
     { id: 'lead', label: 'Lead' },
+    { id: 'pricing', label: 'Pricing' },
     { id: 'escalate', label: 'Escalate', badge: lead.escalated ? '!' : undefined },
     { id: 'summary', label: 'Summary' },
   ];
@@ -113,6 +125,16 @@ export function QuickstartConversationLayout({
         {/* Right controls */}
         <div className="flex items-center gap-2">
           {statusPanel}
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden h-8 gap-1.5 rounded-lg border-violet-500/40 px-3 text-xs font-medium text-violet-400 hover:border-violet-400 hover:bg-violet-500/10 sm:flex"
+            onClick={() => setCatalogModalOpen(true)}
+          >
+            <Tag className="h-3.5 w-3.5" />
+            Pricing Plans
+          </Button>
 
           <Button
             variant="outline"
@@ -183,13 +205,51 @@ export function QuickstartConversationLayout({
             {transcriptPanel}
           </div>
 
-          {/* Agent visualizer */}
-          <div className="flex min-h-0 flex-1 w-full flex-col items-center justify-center gap-4">
-            <div className="flex items-center justify-center w-full">
-              {visualizer}
-            </div>
+          {/* View Mode Toggle: 3D Sphere vs Digital Twin */}
+          <div className="flex items-center gap-1 rounded-full border border-border/80 bg-card/60 p-1 backdrop-blur-md mb-2 shrink-0">
+            <button
+              onClick={() => setVisualizerMode('sphere')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                visualizerMode === 'sphere'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              🌐 3D Wave Visualizer
+            </button>
+            <button
+              onClick={() => setVisualizerMode('avatar')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all',
+                visualizerMode === 'avatar'
+                  ? 'bg-violet-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Sparkles className="h-3 w-3" />
+              👤 Digital Twin Avatar
+            </button>
+          </div>
 
-            {/* Live status badge — centred below the sphere */}
+          {/* Real-time NLP Sentiment Coaching Banner */}
+          <div className="w-full max-w-lg mb-2 shrink-0">
+            <LiveSentimentWidget sentiment={sentiment} />
+          </div>
+
+          {/* Agent visualizer or Digital Twin */}
+          <div className="flex min-h-0 flex-1 w-full flex-col items-center justify-center gap-3">
+            {visualizerMode === 'avatar' ? (
+              <div className="flex items-center justify-center w-full min-h-[18rem]">
+                <DigitalTwinAvatar agentState={agentState} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-full">
+                {visualizer}
+              </div>
+            )}
+
+            {/* Live status badge — centred below the sphere/avatar */}
             <AgentStatusBadge
               agentState={agentState}
               isAgentConnected={isAgentConnected}
@@ -211,6 +271,15 @@ export function QuickstartConversationLayout({
 
           {/* Mobile action buttons */}
           <div className="flex gap-2 pt-3 sm:hidden w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5 border-violet-500/40 text-xs text-violet-400 hover:bg-violet-500/10"
+              onClick={() => setCatalogModalOpen(true)}
+            >
+              <Tag className="h-3.5 w-3.5" />
+              Plans
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -291,6 +360,9 @@ export function QuickstartConversationLayout({
                 </Button>
               </>
             )}
+            {rightTab === 'pricing' && (
+              <ProductCatalogCards className="flex-1" />
+            )}
             {rightTab === 'escalate' && (
               <EscalationPanel onEscalate={handleEscalate} className="flex-1" />
             )}
@@ -321,6 +393,11 @@ export function QuickstartConversationLayout({
         onClose={() => setPhoneCallOpen(false)}
         channelName={channelName}
         agentUid={agentUid}
+      />
+
+      <ProductCatalogModal
+        isOpen={catalogModalOpen}
+        onClose={() => setCatalogModalOpen(false)}
       />
     </div>
   );

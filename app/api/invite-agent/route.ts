@@ -128,8 +128,8 @@ export async function POST(request: NextRequest) {
   try {
     // --- 1. Parse request ---
 
-    const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name } = body;
+    const body = await request.json();
+    const { requester_id, channel_name, knowledge_base, voice_id, persona_modifier } = body;
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -142,6 +142,17 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    // Adapt instructions with dynamic RAG knowledge base & sales persona
+    let finalPrompt = ECHOSPHERE_PROMPT;
+    if (persona_modifier) {
+      finalPrompt = `${finalPrompt}\n\n${persona_modifier}`;
+    }
+    if (knowledge_base) {
+      finalPrompt = `${finalPrompt}\n\n${knowledge_base}`;
+    }
+
+    const chosenVoiceId = voice_id || 'English_captivating_female1';
 
     // --- 2. Build and start the agent ---
 
@@ -157,7 +168,7 @@ export async function POST(request: NextRequest) {
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
       client,
-      instructions: ECHOSPHERE_PROMPT,
+      instructions: finalPrompt,
       greeting: GREETING,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
@@ -235,7 +246,7 @@ export async function POST(request: NextRequest) {
       .withTts(
         new MiniMaxTTS({
           model: 'speech_2_6_turbo',
-          voiceId: 'English_captivating_female1',
+          voiceId: chosenVoiceId,
         }),
         // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
         // new (await import('agora-agents')).ElevenLabsTTS({

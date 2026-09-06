@@ -52,29 +52,42 @@ export function AgentStatusBadge({
   className,
 }: AgentStatusBadgeProps) {
   const { label, dotClass, textClass, ping } = getStatus(agentState, isAgentConnected, connectionState);
+  const isActiveAudio = agentState === 'speaking' || agentState === 'listening';
 
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-2 rounded-full border border-border/60 bg-card/50 px-4 py-1.5 backdrop-blur-sm',
+        'flex items-center justify-center gap-2.5 rounded-full border border-white/10 bg-card/60 px-4 py-1.5 backdrop-blur-md shadow-lg transition-all',
+        agentState === 'speaking' && 'border-violet-500/40 shadow-violet-500/20 glow-violet',
+        agentState === 'listening' && 'border-emerald-500/40 shadow-emerald-500/20 glow-emerald',
+        agentState === 'thinking' && 'border-indigo-500/40 shadow-indigo-500/20 glow-indigo',
         className,
       )}
       role="status"
       aria-live="polite"
       aria-label={`Agent status: ${label}`}
     >
-      {/* Animated dot */}
-      <span className="relative flex h-2 w-2">
-        {ping && (
-          <span
-            className={cn(
-              'absolute inline-flex h-full w-full animate-ping rounded-full opacity-75',
-              dotClass,
-            )}
-          />
-        )}
-        <span className={cn('relative inline-flex h-2 w-2 rounded-full', dotClass)} />
-      </span>
+      {/* Animated dot or mini audio wave */}
+      {isActiveAudio ? (
+        <div className="flex items-center gap-0.5 h-3.5 px-0.5">
+          <span className={cn('w-0.5 rounded-full animate-equalizer-1', dotClass)} />
+          <span className={cn('w-0.5 rounded-full animate-equalizer-2', dotClass)} />
+          <span className={cn('w-0.5 rounded-full animate-equalizer-3', dotClass)} />
+          <span className={cn('w-0.5 rounded-full animate-equalizer-4', dotClass)} />
+        </div>
+      ) : (
+        <span className="relative flex h-2 w-2">
+          {ping && (
+            <span
+              className={cn(
+                'absolute inline-flex h-full w-full animate-ping rounded-full opacity-75',
+                dotClass,
+              )}
+            />
+          )}
+          <span className={cn('relative inline-flex h-2 w-2 rounded-full', dotClass)} />
+        </span>
+      )}
 
       {/* Label */}
       <span className={cn('text-xs font-semibold tracking-wide', textClass)}>
@@ -83,3 +96,4 @@ export function AgentStatusBadge({
     </div>
   );
 }
+

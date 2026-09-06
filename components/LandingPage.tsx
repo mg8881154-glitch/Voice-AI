@@ -173,8 +173,12 @@ export default function LandingPage() {
           body: JSON.stringify({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
-          } as ClientStartRequest),
+            knowledge_base: (await import('@/lib/ragStore')).getActiveKnowledgePromptSnippet(),
+            persona_modifier: (await import('@/lib/personaStore')).getActivePersona().tonePromptModifier,
+            voice_id: (await import('@/lib/personaStore')).getActiveVoice().id,
+          }),
         })
+
           .then(async (res) => {
             const body = await res.json();
             if (!res.ok) {
