@@ -30,6 +30,7 @@ import { PreSessionPreviewModal } from './PreSessionPreviewModal';
 import { VisualPerformanceCharts } from './VisualPerformanceCharts';
 import { CrmSyncCenter }        from './CrmSyncCenter';
 import { DomainPersonaSelector } from './DomainPersonaSelector';
+import { DynamicDomainPersonaSwitcher } from './DynamicDomainPersonaSwitcher';
 import { ArchitectureModal }    from './ArchitectureModal';
 import { cn } from '@/lib/utils';
 
@@ -1259,8 +1260,8 @@ export function FeatureDashboard() {
             </div>
           </div>
 
-          {/* ── Domain-Specific Persona Engine & Dynamic Rich Media Cards ── */}
-          <DomainPersonaSelector showMediaCards={true} className="mb-10" />
+          {/* ── Dynamic AI Domain & Persona Switcher (Context-Synced) ── */}
+          <DynamicDomainPersonaSwitcher showMediaCards={true} className="mb-10" />
 
           {/* ── Category Filter Pills ── */}
           <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-1">

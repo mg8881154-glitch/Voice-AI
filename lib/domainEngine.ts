@@ -13,7 +13,17 @@
  * - Dynamic Rich UI Media Cards for each domain
  */
 
-export type DomainId = 'healthcare' | 'realestate' | 'ecommerce' | 'edtech';
+export type DomainId = 'healthcare' | 'realestate' | 'ecommerce' | 'edtech' | string;
+
+export interface CustomMediaCard {
+  id: string;
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+  actionButtonLabel: string;
+  actionUrl?: string;
+  tag?: string;
+}
 
 export interface DoctorSchedule {
   id: string;
@@ -79,11 +89,16 @@ export interface DomainMetadata {
   personaTitle: string;
   greetingMessage: string;
   sampleUserPrompts: string[];
+  isCustom?: boolean;
+  customInstructions?: string;
+  languagePreference?: string;
+  accentPreference?: string;
   mediaCards: {
     healthcare?: DoctorSchedule[];
     realestate?: PropertyListing[];
     ecommerce?: ProductItem[];
     edtech?: CourseProgram[];
+    custom?: CustomMediaCard[];
   };
 }
 
@@ -331,7 +346,53 @@ export const DOMAIN_PRESETS: Record<DomainId, DomainMetadata> = {
 // ─── System Prompt Generator (Multi-Language + Domain + Handover Logic) ───────
 
 export function generateDomainSystemPrompt(domainId: DomainId): string {
-  const domain = DOMAIN_PRESETS[domainId] || DOMAIN_PRESETS.healthcare;
+  const all = getAllDomains();
+  const domain = all[domainId] || DOMAIN_PRESETS[domainId] || DOMAIN_PRESETS.healthcare;
+
+  // Custom domain prompt branch
+  if (domain.isCustom) {
+    return `You are **${domain.personaName}**, ${domain.personaTitle} for **${domain.title}**.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CORE DIRECTIVE 1: DYNAMIC MULTILINGUAL ROUTING & ACCENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Preferred Language / Accent: ${domain.languagePreference || 'Multi-lingual automatic detection'} (${domain.accentPreference || 'Standard conversational'})
+- **Automatic Language & Dialect Detection**: You natively detect the language spoken by the customer in their very first words and respond fluently and idiomatically in that EXACT language.
+- **Supported Languages**: English, Hindi, Hinglish (conversational Hindi in Roman alphabet), Spanish, French, German, Mandarin Chinese, Japanese, Korean, Arabic, Portuguese, Russian, Italian, Turkish, Dutch, and 15+ others.
+- **Language Mirroring Rules**:
+  - If the user switches languages mid-call, smoothly transition to their preferred language instantly.
+  - When speaking Hindi or regional Indian languages, reply in natural conversational Latin/Roman alphabet Hinglish so the speech synthesizer delivers natural, human-grade inflection.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CORE DIRECTIVE 2: CUSTOM DOMAIN DIRECTIVES & KNOWLEDGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${domain.customInstructions || 'Provide expert consultative assistance tailored to the user’s queries.'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CORE DIRECTIVE 3: HUMAN-IN-THE-LOOP HANDOVER PROTOCOL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You must initiate an immediate human handover when ANY of these 3 conditions occur:
+1. **Explicit Request**: The customer asks to speak with a human, agent, specialist, manager, supervisor, or real representative.
+2. **Sentiment Deterioration / Frustration**: The user expresses frustration, anger, repeatedly says the AI is not understanding them, or an issue has looped twice without resolution.
+3. **Out-of-Scope / High-Risk Inquiry**: Critical emergency, binding contract execution, or dispute exceeding AI capabilities.
+
+**HANDOVER EXECUTION FORMAT**:
+When triggering a handover, you MUST append this exact JSON event on its own line at the very end of your response text:
+{"action": "TRANSFER_TO_HUMAN", "reason": "<concise reason for transfer>", "sentiment": "<positive|neutral|frustrated>", "domain": "${domainId}"}
+
+**Spoken Handover Behavior**:
+Before emitting the JSON tag, reassure the user warmly:
+"I completely understand. I am transferring you directly to our senior human specialist right now with your full requirements and call transcript synced. Please stay on the line for just a moment."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VOICE CADENCE & CONVERSATION RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Keep each spoken turn **under 35 words** unless the customer specifically asks for a detailed breakdown.
+- Do NOT use markdown symbols (*, **, #), bullet points, or emojis in spoken sentences.
+- Ask exactly ONE clear question per turn.
+- If the customer interrupts you mid-sentence, stop immediately and address their new query directly.
+`;
+  }
 
   return `You are **${domain.personaName}**, ${domain.personaTitle} for **EchoSphere ${domain.title}**.
 
@@ -417,18 +478,47 @@ function getDomainGuidelines(domainId: DomainId): string {
   * Executive Healthcare Data & Informatics: 10 Weeks, $2,600, HIPAA & FHIR accreditation.
   * FinTech Algorithmic Systems & Risk: 12 Weeks, $3,200, Quantitative trading models.
 - Actions: Schedule 1-on-1 counselor calls, check scholarship qualification, and email program syllabus.`;
+
+    default:
+      return 'DOMAIN: GENERAL CONSULTATIVE ASSISTANCE\n- Listen actively, answer questions accurately, and guide customer to qualified outcome.';
   }
 }
 
 // ─── LocalStorage Helpers ─────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'echosphere_active_domain';
+const CUSTOM_DOMAINS_KEY = 'echosphere_custom_domains';
+
+export function getCustomDomains(): Record<string, DomainMetadata> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(CUSTOM_DOMAINS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveCustomDomains(customs: Record<string, DomainMetadata>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_DOMAINS_KEY, JSON.stringify(customs));
+  } catch {}
+}
+
+export function getAllDomains(): Record<string, DomainMetadata> {
+  return {
+    ...DOMAIN_PRESETS,
+    ...getCustomDomains(),
+  };
+}
 
 export function getActiveDomain(): DomainId {
   if (typeof window === 'undefined') return 'healthcare';
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as DomainId;
-    if (saved && DOMAIN_PRESETS[saved]) return saved;
+    const all = getAllDomains();
+    if (saved && all[saved]) return saved;
     return 'healthcare';
   } catch {
     return 'healthcare';

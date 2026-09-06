@@ -41,6 +41,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { DomainProvider } from '@/context/DomainContext';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,7 +50,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className="h-full min-h-screen">{children}</body>
+      <body className="h-full min-h-screen">
+        <DomainProvider>{children}</DomainProvider>
+      </body>
     </html>
   );
 }
