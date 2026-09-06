@@ -10,6 +10,10 @@ export interface AgoraTokenData {
 export interface ClientStartRequest {
   requester_id: string;
   channel_name: string;
+  domain?: string;
+  knowledge_base?: string;
+  voice_id?: string;
+  persona_modifier?: string;
 }
 
 export interface StopConversationRequest {

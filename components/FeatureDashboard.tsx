@@ -29,6 +29,8 @@ import { VoicePersonaSelectorModal } from './VoicePersonaSelector';
 import { PreSessionPreviewModal } from './PreSessionPreviewModal';
 import { VisualPerformanceCharts } from './VisualPerformanceCharts';
 import { CrmSyncCenter }        from './CrmSyncCenter';
+import { DomainPersonaSelector } from './DomainPersonaSelector';
+import { ArchitectureModal }    from './ArchitectureModal';
 import { cn } from '@/lib/utils';
 
 const AIAgentLauncher = dynamic(() => import('./AIAgentLauncher'), { ssr: false });
@@ -779,6 +781,7 @@ export function FeatureDashboard() {
   const [ragModalOpen, setRagModalOpen]   = useState(false);
   const [personaModalOpen, setPersonaModalOpen] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [archModalOpen, setArchModalOpen]       = useState(false);
 
   // ── Notifications state ──────────────────────────────────────────────────
   const [notifications, setNotifications] = useState([
@@ -919,6 +922,15 @@ export function FeatureDashboard() {
           >
             <Sliders className="h-3.5 w-3.5" />
             <span>Voice &amp; Persona</span>
+          </button>
+
+          <button
+            onClick={() => setArchModalOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-2.5 py-1.5 text-xs font-semibold text-sky-300 hover:bg-sky-500/20 transition-colors"
+            title="System Architecture & Integration Guide"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+            <span>Architecture &amp; Specs</span>
           </button>
 
           <button
@@ -1247,6 +1259,9 @@ export function FeatureDashboard() {
             </div>
           </div>
 
+          {/* ── Domain-Specific Persona Engine & Dynamic Rich Media Cards ── */}
+          <DomainPersonaSelector showMediaCards={true} className="mb-10" />
+
           {/* ── Category Filter Pills ── */}
           <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-1">
             {[
@@ -1412,6 +1427,16 @@ export function FeatureDashboard() {
       {(profileOpen || notifOpen) && (
         <div className="fixed inset-0 z-30" onClick={() => { setProfileOpen(false); setNotifOpen(false); }} aria-hidden="true" />
       )}
+
+      {/* ── Modals & Drawers ──────────────────────────────────────────────── */}
+      <KnowledgeBaseModal isOpen={ragModalOpen} onClose={() => setRagModalOpen(false)} />
+      <VoicePersonaSelectorModal isOpen={personaModalOpen} onClose={() => setPersonaModalOpen(false)} />
+      <PreSessionPreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        onConfirm={() => { setPreviewModalOpen(false); setActiveFeature('ai-agent'); }}
+      />
+      <ArchitectureModal isOpen={archModalOpen} onClose={() => setArchModalOpen(false)} />
     </div>
   );
 }

@@ -13,6 +13,9 @@ import { PhoneCallModal } from './PhoneCallModal';
 import { DigitalTwinAvatar } from './DigitalTwinAvatar';
 import { LiveSentimentWidget } from './LiveSentimentWidget';
 import { ProductCatalogCards, ProductCatalogModal } from './ProductCatalogCards';
+import { HumanEscalationBanner } from './HumanEscalationBanner';
+import { DomainPersonaSelector } from './DomainPersonaSelector';
+import { getActiveDomain } from '@/lib/domainEngine';
 import { useSentimentAnalyzer } from '@/lib/useSentimentAnalyzer';
 import type { BookingConfirmation } from '@/lib/bookingService';
 import { useLeadStore } from '@/lib/LeadContext';
@@ -38,7 +41,7 @@ type QuickstartConversationLayoutProps = {
   transcript?: any[];
 };
 
-type RightPanelTab = 'lead' | 'pricing' | 'escalate' | 'summary';
+type RightPanelTab = 'domain' | 'lead' | 'pricing' | 'escalate' | 'summary';
 
 export function QuickstartConversationLayout({
   agentState,
@@ -59,7 +62,7 @@ export function QuickstartConversationLayout({
   const [phoneCallOpen, setPhoneCallOpen] = useState(false);
   const [catalogModalOpen, setCatalogModalOpen] = useState(false);
   const [visualizerMode, setVisualizerMode] = useState<'sphere' | 'avatar'>('sphere');
-  const [rightTab, setRightTab] = useState<RightPanelTab>('lead');
+  const [rightTab, setRightTab] = useState<RightPanelTab>('domain');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connectionState] = useState('CONNECTED'); // optimistic; status dot tracks real value
   const [isAgentConnected] = useState(true);       // visualizer already handles this
@@ -88,6 +91,7 @@ export function QuickstartConversationLayout({
   }
 
   const TAB_CONFIG: { id: RightPanelTab; label: string; badge?: string }[] = [
+    { id: 'domain', label: 'Domain Cards' },
     { id: 'lead', label: 'Lead' },
     { id: 'pricing', label: 'Pricing' },
     { id: 'escalate', label: 'Escalate', badge: lead.escalated ? '!' : undefined },
@@ -232,6 +236,21 @@ export function QuickstartConversationLayout({
             </button>
           </div>
 
+          {/* Live Agent Escalation UI Banner: AI Call in Progress + Real-time Sentiment + Request Human Override */}
+          <div className="w-full max-w-2xl mb-2 shrink-0">
+            <HumanEscalationBanner
+              channelName={channelName}
+              activeDomain={getActiveDomain()}
+              transcriptText={Array.isArray(transcript) ? transcript.map(t => t.text || t.content || '').join(' ') : ''}
+              onManualEscalate={() => {
+                setRightTab('escalate');
+                setSidebarOpen(true);
+                handleEscalate();
+              }}
+              isEscalated={lead.escalated}
+            />
+          </div>
+
           {/* Real-time NLP Sentiment Coaching Banner */}
           <div className="w-full max-w-lg mb-2 shrink-0">
             <LiveSentimentWidget sentiment={sentiment} />
@@ -343,6 +362,9 @@ export function QuickstartConversationLayout({
 
           {/* Tab content */}
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 space-y-3">
+            {rightTab === 'domain' && (
+              <DomainPersonaSelector showMediaCards={true} className="flex-1" />
+            )}
             {rightTab === 'lead' && (
               <>
                 <LeadPanel className="flex-1" />

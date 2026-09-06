@@ -11,6 +11,7 @@ import {
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
 import { getProductBriefForPrompt } from '@/lib/productKnowledge';
+import { generateDomainSystemPrompt, DOMAIN_PRESETS, DomainId } from '@/lib/domainEngine';
 
 // ─── EchoSphere Nova — Autonomous Voice AI Sales Agent System Prompt ─────────
 // Product knowledge is injected at boot so Nova always has accurate pricing/
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body = await request.json();
-    const { requester_id, channel_name, knowledge_base, voice_id, persona_modifier } = body;
+    const { requester_id, channel_name, knowledge_base, voice_id, persona_modifier, domain } = body;
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -143,14 +144,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Adapt instructions with dynamic RAG knowledge base & sales persona
-    let finalPrompt = ECHOSPHERE_PROMPT;
+    // Adapt instructions with dynamic domain persona engine, RAG knowledge base & handover rules
+    const activeDomainId = (domain as DomainId) || 'healthcare';
+    let finalPrompt = domain
+      ? generateDomainSystemPrompt(activeDomainId)
+      : ECHOSPHERE_PROMPT;
+
     if (persona_modifier) {
       finalPrompt = `${finalPrompt}\n\n${persona_modifier}`;
     }
     if (knowledge_base) {
       finalPrompt = `${finalPrompt}\n\n${knowledge_base}`;
     }
+
+    const domainGreeting = domain && DOMAIN_PRESETS[activeDomainId]
+      ? DOMAIN_PRESETS[activeDomainId].greetingMessage
+      : GREETING;
 
     const chosenVoiceId = voice_id || 'English_captivating_female1';
 
@@ -169,7 +178,7 @@ export async function POST(request: NextRequest) {
     const agent = new Agent({
       client,
       instructions: finalPrompt,
-      greeting: GREETING,
+      greeting: domainGreeting,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
       // VAD controls how the agent detects the start and end of a user's turn.
@@ -221,7 +230,7 @@ export async function POST(request: NextRequest) {
       .withLlm(
         new OpenAI({
           model: 'gpt-4o-mini',
-          greetingMessage: GREETING,
+          greetingMessage: domainGreeting,
           failureMessage: 'Please wait a moment.',
           maxHistory: 15,
           params: {

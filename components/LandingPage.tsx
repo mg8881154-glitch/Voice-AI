@@ -173,6 +173,7 @@ export default function LandingPage() {
           body: JSON.stringify({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
+            domain: (await import('@/lib/domainEngine')).getActiveDomain(),
             knowledge_base: (await import('@/lib/ragStore')).getActiveKnowledgePromptSnippet(),
             persona_modifier: (await import('@/lib/personaStore')).getActivePersona().tonePromptModifier,
             voice_id: (await import('@/lib/personaStore')).getActiveVoice().id,
